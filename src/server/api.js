@@ -17,6 +17,7 @@ const routes = {
     const signal = evaluateLatestSignal(body.bars || [], { ...config.strategy, ...(body.settings || {}) });
     return { signal };
   },
+  "POST /api/llm/analyze": async (body) => service.analyzeMarketSnapshot(body),
   "POST /api/risk/evaluate": async (body) => ({
     decision: evaluateRisk({
       signal: body.signal,
