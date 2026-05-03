@@ -100,7 +100,7 @@ function createMcpServer() {
       annotations: { readOnlyHint: true },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
-    async (input) => toolResult(service.analyzeMarketSnapshot(input), "Market snapshot analyzed. No order was placed.")
+    async (input) => toolResult(await service.analyzeMarketSnapshot(input), "Market snapshot analyzed. No order was placed.")
   );
 
   server.registerTool(
