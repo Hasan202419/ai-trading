@@ -1,5 +1,7 @@
 # JARVIS Algo Trader MVP
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Hasan202419/ai-trading)
+
 JARVIS v1 is a paper-trading-first algo trader scaffold. It converts the provided Pine/VWAP strategy into deterministic code, keeps risk checks in code, stores analytics in Supabase, runs continuously on Render, and exposes ChatGPT Apps tools for analysis and manual paper-trade approval.
 
 ## Safety model
@@ -42,8 +44,20 @@ npm run mcp
 
 ## Deploy path
 
-1. Create a private GitHub repo and push this project.
-2. Create a Supabase project and run `supabase/schema.sql`.
-3. Create Alpaca paper API keys.
-4. Deploy through Render Blueprint using `render.yaml`.
-5. Connect the MCP endpoint from ChatGPT developer mode after Render provides HTTPS URLs.
+1. Confirm `render.yaml` is present at the repository root.
+2. Click the Deploy to Render button above.
+3. Review the Blueprint resources before approving creation.
+4. Add the secret environment variables from your local `.env` when Render asks for them:
+
+```text
+ALPACA_API_KEY_ID
+ALPACA_API_SECRET_KEY
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+```
+
+5. Keep `TRADING_MODE=paper` and `REQUIRE_MANUAL_APPROVAL=true`.
+6. Connect the MCP endpoint from ChatGPT developer mode after Render provides the `jarvis-mcp` HTTPS URL.
+
+Do not commit `.env` or paste secret values into GitHub.
