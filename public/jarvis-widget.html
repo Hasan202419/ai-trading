@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JARVIS Algo Trader</title>
+    <style>
+      :root {
+        color: #172026;
+        background: #f7f8f5;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+      }
+      .shell {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+      }
+      .badge {
+        border: 1px solid #b8c7bd;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 12px;
+        background: #eef4f0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .panel {
+        border: 1px solid #d5ddd7;
+        border-radius: 8px;
+        background: white;
+        padding: 12px;
+        min-height: 90px;
+      }
+      .panel h2 {
+        margin: 0 0 8px;
+        font-size: 13px;
+        color: #52615a;
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+      }
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="top">
+        <h1>JARVIS Algo Trader</h1>
+        <span class="badge">paper-only</span>
+      </section>
+      <section class="grid">
+        <article class="panel">
+          <h2>Portfolio</h2>
+          <pre id="portfolio">Waiting for tool result...</pre>
+        </article>
+        <article class="panel">
+          <h2>Risk</h2>
+          <pre id="risk">No risk decision yet.</pre>
+        </article>
+        <article class="panel">
+          <h2>Signal</h2>
+          <pre id="signal">No signal yet.</pre>
+        </article>
+        <article class="panel">
+          <h2>Journal</h2>
+          <pre id="journal">No journal loaded yet.</pre>
+        </article>
+      </section>
+    </main>
+    <script type="module">
+      const slots = {
+        portfolio: document.getElementById("portfolio"),
+        risk: document.getElementById("risk"),
+        signal: document.getElementById("signal"),
+        journal: document.getElementById("journal")
+      };
+
+      window.addEventListener(
+        "message",
+        (event) => {
+          if (event.source !== window.parent) return;
+          const message = event.data;
+          if (!message || message.jsonrpc !== "2.0") return;
+          if (message.method !== "ui/notifications/tool-result") return;
+          render(message.params?.structuredContent || {});
+        },
+        { passive: true }
+      );
+
+      function render(data) {
+        if (data.account || data.positions) slots.portfolio.textContent = pretty(data);
+        if (data.status || data.orderPlan || data.reason) slots.risk.textContent = pretty(data);
+        if (data.signal || data.analystNote) slots.signal.textContent = pretty(data);
+        if (data.trades || data.note) slots.journal.textContent = pretty(data);
+      }
+
+      function pretty(value) {
+        return JSON.stringify(value, null, 2);
+      }
+    </script>
+  </body>
+</html>
