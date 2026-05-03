@@ -23,6 +23,11 @@ export function readConfig(env = process.env) {
       anonKey: loadedEnv.SUPABASE_ANON_KEY || "",
       serviceRoleKey: loadedEnv.SUPABASE_SERVICE_ROLE_KEY || ""
     },
+    openai: {
+      apiKey: loadedEnv.OPENAI_API_KEY || "",
+      model: loadedEnv.OPENAI_MODEL || "gpt-5.4-mini",
+      baseUrl: loadedEnv.OPENAI_BASE_URL || "https://api.openai.com/v1"
+    },
     strategy: defaultStrategySettings()
   };
 }
