@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Paper-trading-first JARVIS algo trader MVP with deterministic strategy/risk layers and ChatGPT Apps advisory tools.",
   "type": "module",
+  "packageManager": "npm@11.12.1",
   "private": true,
   "scripts": {
     "start": "node src/server/api.js",
