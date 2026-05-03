@@ -20,7 +20,7 @@ export class OpenAIAnalysisClient {
   }
 
   isConfigured() {
-    return Boolean(this.config.apiKey);
+    return typeof this.config.apiKey === "string" && this.config.apiKey.startsWith("sk-");
   }
 
   async analyzeMarketSnapshot({ symbol = "SPY", signal, bars = [], portfolio = null, recentStats = {} }) {
