@@ -3,12 +3,14 @@ import { evaluateLatestSignal } from "../core/strategy.js";
 import { evaluateRisk } from "../core/risk.js";
 import { AlpacaClient } from "../broker/alpaca.js";
 import { SupabaseRestClient } from "../db/supabase.js";
+import { OpenAIAnalysisClient } from "../llm/openai.js";
 
 export class JarvisService {
   constructor(config = readConfig()) {
     this.config = config;
     this.alpaca = new AlpacaClient(config.alpaca);
     this.db = new SupabaseRestClient(config.supabase);
+    this.llm = new OpenAIAnalysisClient(config.openai);
     this.riskSettings = {
       ...defaultRiskSettings(),
       tradingMode: config.tradingMode,
@@ -39,13 +41,48 @@ export class JarvisService {
     };
   }
 
-  analyzeMarketSnapshot({ symbol = "SPY", bars = [] }) {
+  async analyzeMarketSnapshot({ symbol = "SPY", bars = [], recentStats = {}, portfolio = null }) {
     const signal = evaluateLatestSignal(bars, this.config.strategy, null);
-    return {
+    const result = {
       symbol,
       signal: { ...signal, symbol },
       analystNote: buildAnalystNote(symbol, signal)
     };
+    if (!this.llm.isConfigured()) {
+      return {
+        ...result,
+        llmAnalysis: {
+          configured: false,
+          mode: "advisory_only",
+          note: "OPENAI_API_KEY is not configured; deterministic analysis only."
+        }
+      };
+    }
+    try {
+      const llmAnalysis = await this.llm.analyzeMarketSnapshot({
+        symbol,
+        signal: result.signal,
+        bars,
+        recentStats,
+        portfolio
+      });
+      await this.saveLlmAnalysis({ symbol, llmAnalysis, prompt: "market_snapshot" });
+      return { ...result, llmAnalysis };
+    } catch (error) {
+      await this.audit("llm_analysis_failed", {
+        symbol,
+        error: error.message
+      });
+      return {
+        ...result,
+        llmAnalysis: {
+          configured: true,
+          mode: "advisory_only",
+          error: error.message,
+          note: "LLM analysis failed; deterministic strategy and risk manager remain active."
+        }
+      };
+    }
   }
 
   proposeStrategyAdjustment({ recentStats = {}, marketMode = "normal" }) {
@@ -101,6 +138,17 @@ export class JarvisService {
     return this.db.insert("audit_logs", {
       event_type: eventType,
       payload,
+      created_at: new Date().toISOString()
+    });
+  }
+
+  async saveLlmAnalysis({ symbol, prompt, llmAnalysis }) {
+    if (!this.db.isConfigured()) return { skipped: true };
+    return this.db.insert("llm_analyses", {
+      symbol,
+      prompt,
+      analysis: JSON.stringify(llmAnalysis.analysis || llmAnalysis),
+      model: llmAnalysis.model || this.config.openai.model,
       created_at: new Date().toISOString()
     });
   }
