@@ -6,7 +6,7 @@ export function readConfig(env = process.env) {
   return {
     nodeEnv: loadedEnv.NODE_ENV || "development",
     port: Number(loadedEnv.PORT || 3000),
-    mcpPort: Number(loadedEnv.MCP_PORT || 3333),
+    mcpPort: Number(loadedEnv.MCP_PORT || loadedEnv.PORT || 3333),
     workerIntervalMs: Number(loadedEnv.WORKER_INTERVAL_MS || 60000),
     tradingMode: loadedEnv.TRADING_MODE || "paper",
     requireManualApproval: (loadedEnv.REQUIRE_MANUAL_APPROVAL || "true") === "true",
