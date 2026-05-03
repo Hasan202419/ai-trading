@@ -76,7 +76,7 @@ test("paper-only guard rejects live mode", () => {
 
 test("OpenAI analysis client parses advisory JSON from Responses API", async () => {
   const client = new OpenAIAnalysisClient(
-    { apiKey: "test-key", model: "test-model" },
+    { apiKey: "sk-test-key", model: "test-model" },
     async (url, options) => {
       assert.equal(url, "https://api.openai.com/v1/responses");
       const body = JSON.parse(options.body);
@@ -109,6 +109,11 @@ test("OpenAI analysis client parses advisory JSON from Responses API", async () 
   assert.equal(result.configured, true);
   assert.equal(result.mode, "advisory_only");
   assert.equal(result.analysis.trade_bias, "long");
+});
+
+test("OpenAI analysis client ignores non-OpenAI token prefixes", () => {
+  const client = new OpenAIAnalysisClient({ apiKey: "sbp_not_an_openai_key" });
+  assert.equal(client.isConfigured(), false);
 });
 
 function bar(t, open, high, low, close, volume) {
