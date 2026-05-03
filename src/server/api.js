@@ -32,6 +32,10 @@ const routes = {
 
 const server = http.createServer(async (req, res) => {
   try {
+    if (req.method === "GET" && new URL(req.url, "http://localhost").pathname === "/") {
+      await servePublicFile("jarvis-widget.html", res);
+      return;
+    }
     if (req.method === "GET" && req.url?.startsWith("/public/")) {
       await servePublic(req, res);
       return;
@@ -69,6 +73,10 @@ function json(res, status, value) {
 
 async function servePublic(req, res) {
   const pathname = new URL(req.url, "http://localhost").pathname.replace("/public/", "");
+  await servePublicFile(pathname, res);
+}
+
+async function servePublicFile(pathname, res) {
   const file = join(process.cwd(), "public", pathname);
   const content = await readFile(file);
   const mime = extname(file) === ".html" ? "text/html" : "text/plain";
