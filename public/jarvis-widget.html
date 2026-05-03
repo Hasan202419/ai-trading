@@ -53,6 +53,25 @@
         font-size: 13px;
         color: #52615a;
       }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      button {
+        border: 1px solid #0f6b57;
+        border-radius: 7px;
+        background: #0f6b57;
+        color: white;
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: white;
+        color: #0f6b57;
+      }
       pre {
         margin: 0;
         white-space: pre-wrap;
@@ -71,6 +90,10 @@
       <section class="top">
         <h1>JARVIS Algo Trader</h1>
         <span class="badge">paper-only</span>
+      </section>
+      <section class="actions">
+        <button id="loadPortfolio">Load portfolio</button>
+        <button id="loadJournal" class="secondary">Load journal</button>
       </section>
       <section class="grid">
         <article class="panel">
@@ -111,6 +134,36 @@
         { passive: true }
       );
 
+      document.getElementById("loadPortfolio")?.addEventListener("click", async () => {
+        slots.portfolio.textContent = "Loading...";
+        try {
+          const data = await getJson("/api/portfolio/status");
+          slots.portfolio.textContent = pretty({
+            mode: data.mode,
+            riskLocked: data.riskLocked,
+            accountStatus: data.account?.status,
+            equity: data.account?.equity,
+            positions: data.positions?.map((position) => ({
+              symbol: position.symbol,
+              qty: position.qty,
+              unrealized_pl: position.unrealized_pl
+            })),
+            openOrders: data.openOrders?.length || 0
+          });
+        } catch (error) {
+          slots.portfolio.textContent = error.message;
+        }
+      });
+
+      document.getElementById("loadJournal")?.addEventListener("click", async () => {
+        slots.journal.textContent = "Loading...";
+        try {
+          slots.journal.textContent = pretty(await getJson("/api/trade-journal"));
+        } catch (error) {
+          slots.journal.textContent = error.message;
+        }
+      });
+
       function render(data) {
         if (data.account || data.positions) slots.portfolio.textContent = pretty(data);
         if (data.status || data.orderPlan || data.reason) slots.risk.textContent = pretty(data);
@@ -120,6 +173,12 @@
 
       function pretty(value) {
         return JSON.stringify(value, null, 2);
+      }
+
+      async function getJson(path) {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.json();
       }
     </script>
   </body>
