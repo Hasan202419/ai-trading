@@ -6,52 +6,84 @@
     <title>JARVIS Algo Trader</title>
     <style>
       :root {
-        color: #172026;
-        background: #f7f8f5;
+        color: #182024;
+        background: #f4f6f8;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 14px;
+      }
+      * {
+        box-sizing: border-box;
       }
       body {
         margin: 0;
+        min-width: 320px;
       }
       .shell {
         display: grid;
-        gap: 12px;
-        padding: 14px;
+        gap: 18px;
+        padding: 20px;
+        max-width: 1280px;
+        margin: 0 auto;
       }
       .top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .title {
+        display: grid;
+        gap: 6px;
+      }
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: 24px;
+        line-height: 1.15;
+        letter-spacing: 0;
+      }
+      .subtitle {
+        color: #66727a;
+        font-size: 13px;
+      }
+      .status-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .badge {
+        border: 1px solid #cfd8de;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        background: #ffffff;
+        color: #43515a;
+        white-space: nowrap;
+      }
+      .badge.ok {
+        border-color: #a8d5c5;
+        color: #0f6b57;
+        background: #edf8f4;
+      }
+      .badge.warn {
+        border-color: #f0c97f;
+        color: #7a4d00;
+        background: #fff7e6;
+      }
+      .toolbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-      }
-      h1 {
-        margin: 0;
-        font-size: 18px;
-        line-height: 1.2;
-      }
-      .badge {
-        border: 1px solid #b8c7bd;
-        border-radius: 999px;
-        padding: 4px 9px;
-        font-size: 12px;
-        background: #eef4f0;
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-      .panel {
-        border: 1px solid #d5ddd7;
-        border-radius: 8px;
-        background: white;
+        flex-wrap: wrap;
         padding: 12px;
-        min-height: 90px;
-      }
-      .panel h2 {
-        margin: 0 0 8px;
-        font-size: 13px;
-        color: #52615a;
+        border: 1px solid #d7e0e5;
+        border-radius: 8px;
+        background: #ffffff;
       }
       .actions {
         display: flex;
@@ -59,28 +91,234 @@
         flex-wrap: wrap;
       }
       button {
+        min-height: 36px;
         border: 1px solid #0f6b57;
         border-radius: 7px;
         background: #0f6b57;
-        color: white;
+        color: #ffffff;
         font: inherit;
         font-size: 13px;
-        padding: 8px 10px;
+        padding: 8px 12px;
         cursor: pointer;
       }
       button.secondary {
-        background: white;
+        background: #ffffff;
         color: #0f6b57;
+      }
+      button:disabled {
+        cursor: wait;
+        opacity: 0.7;
+      }
+      .updated {
+        color: #68757d;
+        font-size: 12px;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .metric,
+      .panel {
+        border: 1px solid #d7e0e5;
+        border-radius: 8px;
+        background: #ffffff;
+      }
+      .metric {
+        display: grid;
+        gap: 8px;
+        min-height: 104px;
+        padding: 14px;
+      }
+      .label {
+        color: #66727a;
+        font-size: 12px;
+      }
+      .value {
+        font-size: 24px;
+        line-height: 1.1;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+      .delta {
+        color: #68757d;
+        font-size: 12px;
+      }
+      .delta.good {
+        color: #0f7b5f;
+      }
+      .delta.bad {
+        color: #b3261e;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+        gap: 12px;
+      }
+      .panel {
+        min-height: 240px;
+        padding: 14px;
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .panel h2 {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+      .hint {
+        color: #74818a;
+        font-size: 12px;
+      }
+      .chart-wrap {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 16px;
+        align-items: center;
+      }
+      .donut {
+        width: 164px;
+        height: 164px;
+        border-radius: 50%;
+        background: conic-gradient(#0f6b57 0deg, #d9e2e7 0deg);
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+      .donut::after {
+        content: "";
+        width: 104px;
+        height: 104px;
+        border-radius: 50%;
+        background: #ffffff;
+        position: absolute;
+      }
+      .donut-text {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        justify-items: center;
+        gap: 2px;
+      }
+      .donut-text strong {
+        font-size: 22px;
+      }
+      .legend {
+        display: grid;
+        gap: 8px;
+      }
+      .legend-row,
+      .position-row {
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr) 86px;
+        gap: 10px;
+        align-items: center;
+      }
+      .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        margin-right: 6px;
+        vertical-align: -1px;
+      }
+      .swatch.position {
+        background: #0f6b57;
+      }
+      .swatch.cash {
+        background: #d9e2e7;
+      }
+      .bar-track {
+        height: 10px;
+        border-radius: 999px;
+        background: #ecf0f2;
+        overflow: hidden;
+      }
+      .bar {
+        height: 100%;
+        min-width: 2px;
+        border-radius: 999px;
+      }
+      .bar.good {
+        background: #0f7b5f;
+      }
+      .bar.bad {
+        background: #c24135;
+      }
+      .bar.cash {
+        background: #d9e2e7;
+      }
+      .good {
+        color: #0f7b5f;
+      }
+      .bad {
+        color: #b3261e;
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .table th,
+      .table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #edf1f3;
+        text-align: left;
+        vertical-align: top;
+      }
+      .table th {
+        color: #66727a;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
       pre {
         margin: 0;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         font-size: 12px;
+        color: #29343a;
+      }
+      .empty {
+        color: #77858d;
+        padding: 18px;
+        border: 1px dashed #cfd8de;
+        border-radius: 8px;
+        background: #fbfcfd;
+      }
+      @media (max-width: 920px) {
+        .metrics,
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .chart-wrap {
+          grid-template-columns: 1fr;
+        }
       }
       @media (max-width: 640px) {
+        .shell {
+          padding: 12px;
+        }
+        .top,
+        .toolbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+        .status-row {
+          justify-content: flex-start;
+        }
+        .metrics,
         .grid {
           grid-template-columns: 1fr;
+        }
+        .value {
+          font-size: 21px;
         }
       }
     </style>
@@ -88,38 +326,138 @@
   <body>
     <main class="shell">
       <section class="top">
-        <h1>JARVIS Algo Trader</h1>
-        <span class="badge">paper-only</span>
+        <div class="title">
+          <h1>JARVIS Algo Trader</h1>
+          <p class="subtitle">Paper-trading command center with deterministic risk controls and advisory AI analysis.</p>
+        </div>
+        <div class="status-row">
+          <span class="badge ok" id="modeBadge">paper-only</span>
+          <span class="badge" id="apiBadge">API checking</span>
+          <span class="badge warn" id="riskBadge">manual approval</span>
+        </div>
       </section>
-      <section class="actions">
-        <button id="loadPortfolio">Load portfolio</button>
-        <button id="loadJournal" class="secondary">Load journal</button>
+
+      <section class="toolbar">
+        <div class="actions">
+          <button id="refresh">Refresh dashboard</button>
+          <button id="runSignal" class="secondary">Run sample signal</button>
+        </div>
+        <span class="updated" id="updated">Not loaded yet</span>
       </section>
+
+      <section class="metrics">
+        <article class="metric">
+          <span class="label">Portfolio value</span>
+          <strong class="value" id="portfolioValue">$0.00</strong>
+          <span class="delta" id="portfolioDelta">Waiting for Alpaca</span>
+        </article>
+        <article class="metric">
+          <span class="label">Cash</span>
+          <strong class="value" id="cashValue">$0.00</strong>
+          <span class="delta">Paper account</span>
+        </article>
+        <article class="metric">
+          <span class="label">Buying power</span>
+          <strong class="value" id="buyingPower">$0.00</strong>
+          <span class="delta">Risk checked before orders</span>
+        </article>
+        <article class="metric">
+          <span class="label">Open orders</span>
+          <strong class="value" id="openOrders">0</strong>
+          <span class="delta" id="accountState">Account status unknown</span>
+        </article>
+      </section>
+
       <section class="grid">
         <article class="panel">
-          <h2>Portfolio</h2>
-          <pre id="portfolio">Waiting for tool result...</pre>
+          <div class="panel-head">
+            <h2>Allocation</h2>
+            <span class="hint">cash vs positions</span>
+          </div>
+          <div class="chart-wrap">
+            <div class="donut" id="allocationDonut">
+              <div class="donut-text">
+                <strong id="investedPct">0%</strong>
+                <span class="label">invested</span>
+              </div>
+            </div>
+            <div class="legend" id="allocationLegend"></div>
+          </div>
         </article>
+
         <article class="panel">
-          <h2>Risk</h2>
-          <pre id="risk">No risk decision yet.</pre>
+          <div class="panel-head">
+            <h2>Risk Gate</h2>
+            <span class="hint">hard rules stay in code</span>
+          </div>
+          <pre id="risk">
+Trading mode: paper
+Manual approval: required
+Live trading: disabled in v1</pre>
         </article>
+
         <article class="panel">
-          <h2>Signal</h2>
-          <pre id="signal">No signal yet.</pre>
+          <div class="panel-head">
+            <h2>Position P/L</h2>
+            <span class="hint">unrealized paper P/L</span>
+          </div>
+          <div class="legend" id="positionsChart">
+            <div class="empty">No positions loaded yet.</div>
+          </div>
         </article>
+
         <article class="panel">
-          <h2>Journal</h2>
-          <pre id="journal">No journal loaded yet.</pre>
+          <div class="panel-head">
+            <h2>Signal Monitor</h2>
+            <span class="hint">VWAP strategy sample</span>
+          </div>
+          <pre id="signal">No signal run yet.</pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Trade Journal</h2>
+            <span class="hint">Supabase journal</span>
+          </div>
+          <div id="journal" class="empty">No journal loaded yet.</div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>System</h2>
+            <span class="hint">service checks</span>
+          </div>
+          <pre id="system">Loading service status...</pre>
         </article>
       </section>
     </main>
+
     <script type="module">
-      const slots = {
-        portfolio: document.getElementById("portfolio"),
+      const apiBase = location.hostname.includes("onrender.com") ? "" : "https://jarvis-api-5roc.onrender.com";
+      const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+      const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+
+      const el = {
+        modeBadge: document.getElementById("modeBadge"),
+        apiBadge: document.getElementById("apiBadge"),
+        riskBadge: document.getElementById("riskBadge"),
+        updated: document.getElementById("updated"),
+        portfolioValue: document.getElementById("portfolioValue"),
+        portfolioDelta: document.getElementById("portfolioDelta"),
+        cashValue: document.getElementById("cashValue"),
+        buyingPower: document.getElementById("buyingPower"),
+        openOrders: document.getElementById("openOrders"),
+        accountState: document.getElementById("accountState"),
+        allocationDonut: document.getElementById("allocationDonut"),
+        investedPct: document.getElementById("investedPct"),
+        allocationLegend: document.getElementById("allocationLegend"),
+        positionsChart: document.getElementById("positionsChart"),
         risk: document.getElementById("risk"),
         signal: document.getElementById("signal"),
-        journal: document.getElementById("journal")
+        journal: document.getElementById("journal"),
+        system: document.getElementById("system"),
+        refresh: document.getElementById("refresh"),
+        runSignal: document.getElementById("runSignal")
       };
 
       window.addEventListener(
@@ -129,56 +467,213 @@
           const message = event.data;
           if (!message || message.jsonrpc !== "2.0") return;
           if (message.method !== "ui/notifications/tool-result") return;
-          render(message.params?.structuredContent || {});
+          renderToolResult(message.params?.structuredContent || {});
         },
         { passive: true }
       );
 
-      document.getElementById("loadPortfolio")?.addEventListener("click", async () => {
-        slots.portfolio.textContent = "Loading...";
+      el.refresh.addEventListener("click", () => loadDashboard());
+      el.runSignal.addEventListener("click", () => runSampleSignal());
+      loadDashboard();
+
+      async function loadDashboard() {
+        setBusy(true);
         try {
-          const data = await getJson("/api/portfolio/status");
-          slots.portfolio.textContent = pretty({
-            mode: data.mode,
-            riskLocked: data.riskLocked,
-            accountStatus: data.account?.status,
-            equity: data.account?.equity,
-            positions: data.positions?.map((position) => ({
-              symbol: position.symbol,
-              qty: position.qty,
-              unrealized_pl: position.unrealized_pl
-            })),
-            openOrders: data.openOrders?.length || 0
+          const [health, portfolio, journal] = await Promise.all([
+            getJson("/health"),
+            getJson("/api/portfolio/status"),
+            getJson("/api/trade-journal")
+          ]);
+          renderHealth(health);
+          renderPortfolio(portfolio);
+          renderJournal(journal);
+          el.updated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+        } catch (error) {
+          el.apiBadge.textContent = "API error";
+          el.apiBadge.className = "badge warn";
+          el.system.textContent = error.message;
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      async function runSampleSignal() {
+        el.runSignal.disabled = true;
+        el.signal.textContent = "Running deterministic VWAP sample...";
+        try {
+          const data = await postJson("/api/strategy/evaluate", {
+            bars: [
+              bar("2026-05-01T13:33:00Z", 100, 101, 99, 99.5, 1000),
+              bar("2026-05-01T13:34:00Z", 99.5, 101, 99, 100.8, 2500),
+              bar("2026-05-01T13:35:00Z", 100.8, 102, 100.2, 101.2, 2600)
+            ],
+            settings: {
+              minAtrPct: 0,
+              minVolumeRatio: 0,
+              volumeLookback: 2,
+              trendLookback: 2,
+              atrPeriod: 2
+            }
           });
+          el.signal.textContent = pretty(data.signal);
         } catch (error) {
-          slots.portfolio.textContent = error.message;
+          el.signal.textContent = error.message;
+        } finally {
+          el.runSignal.disabled = false;
         }
-      });
+      }
 
-      document.getElementById("loadJournal")?.addEventListener("click", async () => {
-        slots.journal.textContent = "Loading...";
-        try {
-          slots.journal.textContent = pretty(await getJson("/api/trade-journal"));
-        } catch (error) {
-          slots.journal.textContent = error.message;
+      function renderHealth(health) {
+        el.modeBadge.textContent = health.mode || "paper";
+        el.apiBadge.textContent = health.ok ? "API online" : "API offline";
+        el.apiBadge.className = health.ok ? "badge ok" : "badge warn";
+        el.system.textContent = pretty({
+          api: health.service,
+          mode: health.mode,
+          mcp: "https://jarvis-mcp-pwxy.onrender.com/mcp",
+          app: "https://jarvis-api-5roc.onrender.com"
+        });
+      }
+
+      function renderPortfolio(data) {
+        const account = data.account || {};
+        const positions = Array.isArray(data.positions) ? data.positions : [];
+        const equity = toNumber(account.portfolio_value || account.equity);
+        const lastEquity = toNumber(account.last_equity);
+        const cash = toNumber(account.cash);
+        const buyingPower = toNumber(account.buying_power || account.effective_buying_power);
+        const positionValue = positions.reduce((sum, position) => sum + Math.abs(toNumber(position.market_value)), 0);
+        const invested = equity > 0 ? Math.min(100, (positionValue / equity) * 100) : 0;
+        const delta = equity - lastEquity;
+
+        el.portfolioValue.textContent = money.format(equity);
+        el.cashValue.textContent = money.format(cash);
+        el.buyingPower.textContent = money.format(buyingPower);
+        el.openOrders.textContent = String(data.openOrders?.length || 0);
+        el.accountState.textContent = `Account ${account.status || "unknown"}`;
+        el.portfolioDelta.textContent = `${delta >= 0 ? "+" : ""}${money.format(delta)} vs last equity`;
+        el.portfolioDelta.className = `delta ${delta >= 0 ? "good" : "bad"}`;
+        el.riskBadge.textContent = data.riskLocked ? "risk locked" : "risk clear";
+        el.riskBadge.className = data.riskLocked ? "badge warn" : "badge ok";
+        el.risk.textContent = pretty({
+          tradingMode: data.mode,
+          riskLocked: data.riskLocked,
+          accountBlocked: Boolean(account.account_blocked),
+          tradingBlocked: Boolean(account.trading_blocked),
+          manualApproval: "required",
+          liveTrading: "disabled"
+        });
+
+        el.investedPct.textContent = `${number.format(invested)}%`;
+        el.allocationDonut.style.background = `conic-gradient(#0f6b57 0deg ${invested * 3.6}deg, #d9e2e7 ${invested * 3.6}deg 360deg)`;
+        el.allocationLegend.innerHTML = [
+          legendRow("position", "Positions", money.format(positionValue)),
+          legendRow("cash", "Cash", money.format(cash))
+        ].join("");
+        renderPositions(positions);
+      }
+
+      function renderPositions(positions) {
+        if (!positions.length) {
+          el.positionsChart.innerHTML = '<div class="empty">No open positions.</div>';
+          return;
         }
-      });
+        const maxAbs = Math.max(...positions.map((position) => Math.abs(toNumber(position.unrealized_pl))), 1);
+        el.positionsChart.innerHTML = positions
+          .map((position) => {
+            const pl = toNumber(position.unrealized_pl);
+            const width = Math.max(3, Math.min(100, (Math.abs(pl) / maxAbs) * 100));
+            const cls = pl >= 0 ? "good" : "bad";
+            return `
+              <div class="position-row">
+                <strong>${escapeHtml(position.symbol || "-")}</strong>
+                <div class="bar-track"><div class="bar ${cls}" style="width:${width}%"></div></div>
+                <span class="mono ${cls}">${money.format(pl)}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
 
-      function render(data) {
-        if (data.account || data.positions) slots.portfolio.textContent = pretty(data);
-        if (data.status || data.orderPlan || data.reason) slots.risk.textContent = pretty(data);
-        if (data.signal || data.analystNote) slots.signal.textContent = pretty(data);
-        if (data.trades || data.note) slots.journal.textContent = pretty(data);
+      function renderJournal(data) {
+        const trades = Array.isArray(data.trades) ? data.trades : [];
+        if (!trades.length) {
+          el.journal.className = "empty";
+          el.journal.textContent = "No closed trades in journal yet.";
+          return;
+        }
+        el.journal.className = "";
+        el.journal.innerHTML = `
+          <table class="table">
+            <thead><tr><th>Symbol</th><th>Side</th><th>P/L</th><th>Exit</th></tr></thead>
+            <tbody>
+              ${trades
+                .map(
+                  (trade) => `
+                    <tr>
+                      <td>${escapeHtml(trade.symbol || "-")}</td>
+                      <td>${escapeHtml(trade.side || "-")}</td>
+                      <td>${money.format(toNumber(trade.pnl))}</td>
+                      <td>${escapeHtml(trade.exit_reason || "-")}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
+      function renderToolResult(data) {
+        if (data.account || data.positions) renderPortfolio(data);
+        if (data.status || data.orderPlan || data.reason) el.risk.textContent = pretty(data);
+        if (data.signal || data.analystNote) el.signal.textContent = pretty(data);
+        if (data.trades || data.note) renderJournal(data);
+      }
+
+      async function getJson(path) {
+        const response = await fetch(`${apiBase}${path}`);
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.json();
+      }
+
+      async function postJson(path, body) {
+        const response = await fetch(`${apiBase}${path}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+        return response.json();
+      }
+
+      function setBusy(isBusy) {
+        el.refresh.disabled = isBusy;
+        el.refresh.textContent = isBusy ? "Refreshing..." : "Refresh dashboard";
+      }
+
+      function legendRow(kind, label, value) {
+        return `<div class="legend-row"><span><span class="swatch ${kind}"></span>${label}</span><div class="bar-track"><div class="bar ${kind}" style="width:100%"></div></div><strong>${value}</strong></div>`;
+      }
+
+      function bar(t, open, high, low, close, volume) {
+        return { t, open, high, low, close, volume };
+      }
+
+      function toNumber(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : 0;
       }
 
       function pretty(value) {
         return JSON.stringify(value, null, 2);
       }
 
-      async function getJson(path) {
-        const response = await fetch(path);
-        if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-        return response.json();
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => {
+          const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+          return map[char];
+        });
       }
     </script>
   </body>
