@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { defaultRiskSettings, defaultStrategySettings } from "../src/config.js";
 import { evaluateRisk } from "../src/core/risk.js";
 import { evaluateLatestSignal, runStrategy } from "../src/core/strategy.js";
+import { OpenAIAnalysisClient } from "../src/llm/openai.js";
 
 const baseSettings = {
   ...defaultStrategySettings(),
@@ -71,6 +72,43 @@ test("paper-only guard rejects live mode", () => {
   });
   assert.equal(decision.status, "REJECTED");
   assert.equal(decision.reason, "live_trading_disabled_in_v1");
+});
+
+test("OpenAI analysis client parses advisory JSON from Responses API", async () => {
+  const client = new OpenAIAnalysisClient(
+    { apiKey: "test-key", model: "test-model" },
+    async (url, options) => {
+      assert.equal(url, "https://api.openai.com/v1/responses");
+      const body = JSON.parse(options.body);
+      assert.equal(body.model, "test-model");
+      return {
+        ok: true,
+        async json() {
+          return {
+            id: "resp_test",
+            output_text: JSON.stringify({
+              summary: "VWAP setup is advisory only.",
+              market_mode: "normal",
+              confidence: 0.72,
+              trade_bias: "long",
+              risks: ["paper-only"],
+              checklist: ["risk manager approval required"],
+              parameter_suggestions: [],
+              risk_note: "Do not bypass deterministic checks."
+            })
+          };
+        }
+      };
+    }
+  );
+  const result = await client.analyzeMarketSnapshot({
+    symbol: "SPY",
+    signal: buySignal(),
+    bars: [bar("2026-05-01T13:34:00Z", 99.5, 101, 99, 100.8, 2500)]
+  });
+  assert.equal(result.configured, true);
+  assert.equal(result.mode, "advisory_only");
+  assert.equal(result.analysis.trade_bias, "long");
 });
 
 function bar(t, open, high, low, close, volume) {
