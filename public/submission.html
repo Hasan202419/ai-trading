@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JARVIS ChatGPT App Submission</title>
+    <style>
+      :root {
+        color: #e6edf2;
+        background: #070b0f;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, rgba(13, 22, 30, 0.96), rgba(7, 11, 15, 1)),
+          repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 72px);
+      }
+
+      main {
+        display: grid;
+        gap: 16px;
+        width: min(1120px, calc(100vw - 28px));
+        margin: 0 auto;
+        padding: 24px 0;
+      }
+
+      .hero,
+      .card {
+        border: 1px solid rgba(126, 155, 170, 0.22);
+        border-radius: 8px;
+        background: rgba(12, 20, 27, 0.96);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: center;
+        padding: 24px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        margin-top: 8px;
+        font-size: clamp(30px, 4vw, 52px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      .eyebrow {
+        color: #6ee7c7;
+        font-size: 12px;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        max-width: 760px;
+        margin-top: 12px;
+        color: #9fb0ba;
+        line-height: 1.55;
+      }
+
+      .logo {
+        width: 132px;
+        height: 132px;
+        border: 1px solid rgba(126, 155, 170, 0.24);
+        border-radius: 8px;
+        background: #070b0f;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      label {
+        color: #8fa2ad;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      code,
+      textarea,
+      input {
+        width: 100%;
+        border: 1px solid rgba(126, 155, 170, 0.26);
+        border-radius: 7px;
+        background: #101a22;
+        color: #e6edf2;
+        font: inherit;
+        padding: 10px;
+      }
+
+      textarea {
+        min-height: 132px;
+        resize: vertical;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      a,
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        border: 1px solid #22c49e;
+        border-radius: 7px;
+        background: #18a886;
+        color: #04100d;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 850;
+        padding: 10px 13px;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      a.secondary,
+      button.secondary {
+        background: transparent;
+        color: #78e9cd;
+      }
+
+      ol {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding-left: 20px;
+        color: #b8c7cf;
+        line-height: 1.45;
+      }
+
+      .note {
+        color: #f5c56f;
+        line-height: 1.5;
+      }
+
+      @media (max-width: 760px) {
+        .hero,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .logo {
+          width: 96px;
+          height: 96px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">ChatGPT Apps submission helper</p>
+          <h1>JARVIS Algo Trader</h1>
+          <p class="subtitle">
+            Everything needed for the OpenAI Platform submission page is prepared here: app metadata, MCP URL, import JSON, and logo.
+          </p>
+        </div>
+        <img class="logo" src="/public/jarvis-logo.png" alt="JARVIS logo" />
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Upload Files</h2>
+          <div class="actions">
+            <a href="/chatgpt-app-submission.json" download>Download submission JSON</a>
+            <a class="secondary" href="/public/jarvis-logo.png" download>Download logo PNG</a>
+          </div>
+          <p class="note">In the OpenAI Platform form, upload the JSON in the green Codex box and upload the PNG in Logo Icon.</p>
+        </article>
+
+        <article class="card">
+          <h2>MCP Server</h2>
+          <div class="field">
+            <label for="mcpUrl">MCP server URL</label>
+            <input id="mcpUrl" readonly value="https://jarvis-mcp-pwxy.onrender.com/mcp" />
+          </div>
+          <div class="actions">
+            <button data-copy="mcpUrl">Copy MCP URL</button>
+            <a class="secondary" href="https://jarvis-mcp-pwxy.onrender.com/status" target="_blank" rel="noreferrer">Open status</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>App Info</h2>
+          <div class="field">
+            <label for="displayName">Display name</label>
+            <input id="displayName" readonly value="JARVIS Algo Trader" />
+          </div>
+          <div class="field">
+            <label for="subtitle">Subtitle</label>
+            <input id="subtitle" readonly value="Paper trading desk" />
+          </div>
+          <div class="field">
+            <label for="category">Category</label>
+            <input id="category" readonly value="FINANCE" />
+          </div>
+          <div class="actions">
+            <button data-copy="displayName">Copy name</button>
+            <button class="secondary" data-copy="subtitle">Copy subtitle</button>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Description</h2>
+          <textarea id="description" readonly>JARVIS Algo Trader helps users monitor an Alpaca paper-trading account, inspect deterministic VWAP strategy signals, screen Yahoo Finance volume activity, review risk rules, and get advisory-only market analysis in ChatGPT. The app keeps live trading disabled and requires deterministic risk checks before any paper-trade approval workflow.</textarea>
+          <div class="actions">
+            <button data-copy="description">Copy description</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="card">
+        <h2>OpenAI Platform Steps</h2>
+        <ol>
+          <li>Stay on App Info and upload the logo PNG in Logo Icon.</li>
+          <li>Drag or upload <strong>chatgpt-app-submission.json</strong> into the green Codex import box.</li>
+          <li>Click Continue, then use <strong>https://jarvis-mcp-pwxy.onrender.com/mcp</strong> on the MCP Server step.</li>
+          <li>Run the imported positive and negative tests on the Testing step.</li>
+          <li>Keep it paper trading only. Do not paste secret keys into the form.</li>
+        </ol>
+      </section>
+    </main>
+
+    <script>
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const target = document.getElementById(button.dataset.copy);
+          await navigator.clipboard.writeText(target.value);
+          const original = button.textContent;
+          button.textContent = "Copied";
+          setTimeout(() => {
+            button.textContent = original;
+          }, 1300);
+        });
+      });
+    </script>
+  </body>
+</html>

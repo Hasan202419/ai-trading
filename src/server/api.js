@@ -55,6 +55,14 @@ const server = http.createServer(async (req, res) => {
       await servePublicFile("jarvis-widget.html", res);
       return;
     }
+    if (req.method === "GET" && new URL(req.url, "http://localhost").pathname === "/submission") {
+      await servePublicFile("submission.html", res);
+      return;
+    }
+    if (req.method === "GET" && new URL(req.url, "http://localhost").pathname === "/chatgpt-app-submission.json") {
+      await serveSubmissionJson(res);
+      return;
+    }
     if (req.method === "GET" && req.url?.startsWith("/public/")) {
       await servePublic(req, res);
       return;
@@ -100,5 +108,14 @@ async function servePublicFile(pathname, res) {
   const content = await readFile(file);
   const mime = extname(file) === ".html" ? "text/html" : "text/plain";
   res.writeHead(200, { "Content-Type": mime });
+  res.end(content);
+}
+
+async function serveSubmissionJson(res) {
+  const content = await readFile(join(process.cwd(), "chatgpt-app-submission.json"));
+  res.writeHead(200, {
+    "Content-Type": "application/json",
+    "Content-Disposition": "attachment; filename=\"chatgpt-app-submission.json\""
+  });
   res.end(content);
 }
