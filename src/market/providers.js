@@ -37,12 +37,14 @@ export class MarketDataRouter {
         continue;
       }
       try {
-        const [bars, quote] = await Promise.all([
+        const requestedLimit = Number(limit) || DEFAULT_LIMIT;
+        const [barsRaw, quote] = await Promise.all([
           client.getBars({ symbol: normalized, timeframe, limit }),
           client.getQuote({ symbol: normalized }).catch((error) => ({
             error: error.message
           }))
         ]);
+        const bars = barsRaw.slice(-requestedLimit);
         if (!bars.length) {
           errors.push({ provider: client.id, reason: "no_bars_returned" });
           continue;
