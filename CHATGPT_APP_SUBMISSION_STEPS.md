@@ -15,6 +15,7 @@ Use these values in the OpenAI Platform ChatGPT Apps submission flow.
 - MCP server URL: `https://jarvis-mcp-pwxy.onrender.com/mcp`
 - Status page: `https://jarvis-mcp-pwxy.onrender.com/status`
 - Health check: `https://jarvis-mcp-pwxy.onrender.com/health`
+- Domain verification URL: `https://jarvis-mcp-pwxy.onrender.com/.well-known/openai-apps-challenge`
 
 ## Import File
 

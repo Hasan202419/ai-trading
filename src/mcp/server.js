@@ -11,12 +11,18 @@ const config = readConfig();
 const service = new JarvisService(config);
 const widgetUri = "ui://widget/jarvis-dashboard-v1.html";
 const widgetHtml = readFileSync(new URL("../../public/jarvis-widget.html", import.meta.url), "utf8");
+const defaultOpenaiAppsChallengeToken = "gZBcMpiLKSMVSBDVEoIrD1ZXlo6mAsZ1KRZNUmiDbsG";
 
 const httpServer = http.createServer(async (req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
   if (pathname === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ ok: true, service: "jarvis-mcp", mode: config.tradingMode, endpoint: "/mcp" }));
+    return;
+  }
+  if (req.method === "GET" && pathname === "/.well-known/openai-apps-challenge") {
+    res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end(config.openaiAppsChallengeToken || defaultOpenaiAppsChallengeToken);
     return;
   }
   if (req.method === "GET" && pathname === "/status") {
@@ -297,7 +303,7 @@ function renderStatusPage() {
   <body>
     <main>
       <h1>JARVIS MCP is online</h1>
-      <p>This service is the ChatGPT Apps/MCP bridge. Use <code>/mcp</code> as the MCP endpoint. Health checks stay available at <code>/health</code>.</p>
+      <p>This service is the ChatGPT Apps/MCP bridge. Use <code>/mcp</code> as the MCP endpoint. Health checks stay available at <code>/health</code>, and OpenAI domain verification is served from <code>/.well-known/openai-apps-challenge</code>.</p>
       <div class="grid">
         <div class="card"><span>Service</span><strong>jarvis-mcp</strong></div>
         <div class="card"><span>Mode</span><strong>${escapeHtml(config.tradingMode)}</strong></div>

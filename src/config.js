@@ -8,6 +8,7 @@ export function readConfig(env = process.env) {
     port: Number(loadedEnv.PORT || 3000),
     mcpPort: Number(loadedEnv.MCP_PORT || loadedEnv.PORT || 3333),
     workerIntervalMs: Number(loadedEnv.WORKER_INTERVAL_MS || 60000),
+    openaiAppsChallengeToken: loadedEnv.OPENAI_APPS_CHALLENGE_TOKEN || "",
     tradingMode: loadedEnv.TRADING_MODE || "paper",
     requireManualApproval: (loadedEnv.REQUIRE_MANUAL_APPROVAL || "true") === "true",
     appPublicUrl: loadedEnv.APP_PUBLIC_URL || "http://localhost:3000",
