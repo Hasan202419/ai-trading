@@ -13,13 +13,24 @@ const widgetUri = "ui://widget/jarvis-dashboard-v1.html";
 const widgetHtml = readFileSync(new URL("../../public/jarvis-widget.html", import.meta.url), "utf8");
 
 const httpServer = http.createServer(async (req, res) => {
-  if (req.url === "/health") {
+  const pathname = new URL(req.url, "http://localhost").pathname;
+  if (pathname === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, service: "jarvis-mcp" }));
+    res.end(JSON.stringify({ ok: true, service: "jarvis-mcp", mode: config.tradingMode, endpoint: "/mcp" }));
     return;
   }
-  if (!["/", "/mcp"].includes(new URL(req.url, "http://localhost").pathname)) {
+  if (req.method === "GET" && pathname === "/status") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(renderStatusPage());
+    return;
+  }
+  if (!["/", "/mcp"].includes(pathname)) {
     jsonRpcError(res, 404, -32001, "MCP endpoint not found.");
+    return;
+  }
+  if (req.method === "GET" && pathname === "/") {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(renderStatusPage());
     return;
   }
   if (req.method !== "POST") {
@@ -209,4 +220,97 @@ function toolResult(data, text) {
 function jsonRpcError(res, status, code, message) {
   res.writeHead(status, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ jsonrpc: "2.0", error: { code, message }, id: null }));
+}
+
+function renderStatusPage() {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JARVIS MCP Status</title>
+    <style>
+      :root {
+        color: #e6edf2;
+        background: #070b0f;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+        background:
+          linear-gradient(180deg, rgba(13, 22, 30, 0.96), #070b0f),
+          repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 72px);
+      }
+      main {
+        width: min(760px, calc(100vw - 28px));
+        border: 1px solid rgba(126, 155, 170, 0.24);
+        border-radius: 8px;
+        background: rgba(12, 20, 27, 0.96);
+        padding: 24px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.36);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 34px;
+        letter-spacing: 0;
+      }
+      p {
+        color: #9fb0ba;
+        line-height: 1.55;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .card {
+        border: 1px solid rgba(126, 155, 170, 0.2);
+        border-radius: 8px;
+        padding: 12px;
+        background: rgba(7, 13, 18, 0.58);
+      }
+      span {
+        color: #90a3ae;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      strong {
+        display: block;
+        color: #6ee7c7;
+        margin-top: 8px;
+      }
+      code {
+        color: #78e9cd;
+      }
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>JARVIS MCP is online</h1>
+      <p>This service is the ChatGPT Apps/MCP bridge. Use <code>/mcp</code> as the MCP endpoint. Health checks stay available at <code>/health</code>.</p>
+      <div class="grid">
+        <div class="card"><span>Service</span><strong>jarvis-mcp</strong></div>
+        <div class="card"><span>Mode</span><strong>${escapeHtml(config.tradingMode)}</strong></div>
+        <div class="card"><span>Orders</span><strong>advisory only</strong></div>
+      </div>
+    </main>
+  </body>
+</html>`;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => {
+    const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+    return map[char];
+  });
 }

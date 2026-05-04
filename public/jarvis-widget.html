@@ -6,209 +6,287 @@
     <title>JARVIS Algo Trader</title>
     <style>
       :root {
-        color: #182024;
-        background: #f4f6f8;
+        color: #e6edf2;
+        background: #070b0f;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 14px;
       }
+
       * {
         box-sizing: border-box;
       }
+
       body {
         margin: 0;
         min-width: 320px;
+        min-height: 100vh;
         background:
-          linear-gradient(180deg, #eef3f5 0%, #f7f9fa 34%, #eef2f4 100%);
+          linear-gradient(180deg, rgba(13, 22, 30, 0.96), rgba(7, 11, 15, 1) 52%),
+          repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 72px),
+          repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 72px);
       }
-      .shell {
-        display: grid;
-        gap: 18px;
-        padding: 20px;
-        max-width: 1280px;
-        margin: 0 auto;
-      }
-      .top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-      }
-      .title {
-        display: grid;
-        gap: 6px;
-      }
+
       h1,
       h2,
+      h3,
       p {
         margin: 0;
       }
-      h1 {
-        font-size: 24px;
-        line-height: 1.15;
-        letter-spacing: 0;
-      }
-      .subtitle {
-        color: #66727a;
-        font-size: 13px;
-      }
-      .status-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-      .badge {
-        border: 1px solid #cfd8de;
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 12px;
-        background: #ffffff;
-        color: #43515a;
-        white-space: nowrap;
-      }
-      .badge.ok {
-        border-color: #a8d5c5;
-        color: #0f6b57;
-        background: #edf8f4;
-      }
-      .badge.warn {
-        border-color: #f0c97f;
-        color: #7a4d00;
-        background: #fff7e6;
-      }
-      .toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        padding: 12px;
-        border: 1px solid #d7e0e5;
-        border-radius: 8px;
-        background: #ffffff;
-        box-shadow: 0 10px 24px rgba(30, 45, 55, 0.06);
-      }
-      .actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .market-controls {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .terminal-strip {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 10px;
-      }
-      .strip-item {
-        border: 1px solid #d5dee3;
-        border-radius: 8px;
-        background: #132226;
-        color: #e7f1ef;
-        min-height: 74px;
-        padding: 12px;
-        display: grid;
-        align-content: center;
-        gap: 5px;
-      }
-      .strip-item strong {
-        font-size: 13px;
-      }
-      .strip-item span {
-        color: #9db3ad;
-        font-size: 12px;
-      }
+
+      button,
       input,
       select {
-        min-height: 36px;
-        border: 1px solid #cfd8de;
-        border-radius: 7px;
-        background: #ffffff;
-        color: #182024;
         font: inherit;
-        font-size: 13px;
-        padding: 8px 10px;
       }
-      input {
-        width: 92px;
+
+      .shell {
+        display: grid;
+        gap: 18px;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 18px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: stretch;
+        min-height: 168px;
+        border: 1px solid rgba(126, 155, 170, 0.22);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(16, 28, 38, 0.96), rgba(10, 16, 22, 0.98)),
+          linear-gradient(90deg, rgba(25, 169, 137, 0.16), transparent 42%);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        overflow: hidden;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 12px;
+        align-content: center;
+        padding: 24px;
+      }
+
+      .eyebrow {
+        color: #6ee7c7;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
-      button {
-        min-height: 36px;
-        border: 1px solid #0f6b57;
+
+      h1 {
+        max-width: 740px;
+        font-size: clamp(28px, 4vw, 54px);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        max-width: 760px;
+        color: #9fb0ba;
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .hero-board {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+        gap: 10px;
+        min-width: 360px;
+        padding: 18px;
+        border-left: 1px solid rgba(126, 155, 170, 0.18);
+        background: rgba(5, 9, 12, 0.42);
+      }
+
+      .status-tile {
+        display: grid;
+        gap: 8px;
+        min-height: 64px;
+        padding: 12px;
+        border: 1px solid rgba(126, 155, 170, 0.2);
+        border-radius: 8px;
+        background: rgba(13, 22, 30, 0.82);
+      }
+
+      .status-tile span {
+        color: #92a6b1;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .status-tile strong {
+        color: #f4f9fb;
+        font-size: 16px;
+      }
+
+      .status-tile.ok strong {
+        color: #6ee7c7;
+      }
+
+      .status-tile.warn strong {
+        color: #f5c56f;
+      }
+
+      .command-bar {
+        display: grid;
+        grid-template-columns: auto minmax(320px, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid rgba(126, 155, 170, 0.22);
+        border-radius: 8px;
+        background: rgba(11, 18, 24, 0.96);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+      }
+
+      .actions,
+      .market-controls,
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      input,
+      select {
+        min-height: 40px;
+        border: 1px solid rgba(126, 155, 170, 0.3);
         border-radius: 7px;
-        background: #0f6b57;
-        color: #ffffff;
-        font: inherit;
+        background: #101a22;
+        color: #e6edf2;
+        padding: 9px 11px;
+      }
+
+      input {
+        width: 96px;
+        text-transform: uppercase;
+      }
+
+      select {
+        width: 154px;
+      }
+
+      button {
+        min-height: 40px;
+        border: 1px solid #22c49e;
+        border-radius: 7px;
+        background: #18a886;
+        color: #04100d;
         font-size: 13px;
-        padding: 8px 12px;
+        font-weight: 800;
+        padding: 9px 12px;
         cursor: pointer;
       }
+
       button.secondary {
-        background: #ffffff;
-        color: #0f6b57;
+        background: transparent;
+        color: #78e9cd;
       }
+
       button:disabled {
         cursor: wait;
         opacity: 0.7;
       }
+
       .updated {
-        color: #68757d;
+        justify-self: end;
+        color: #8799a3;
         font-size: 12px;
+        white-space: nowrap;
       }
+
+      .badge {
+        border: 1px solid rgba(126, 155, 170, 0.28);
+        border-radius: 999px;
+        padding: 8px 11px;
+        color: #cbd7de;
+        background: #111d25;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .badge.ok {
+        border-color: rgba(34, 196, 158, 0.5);
+        color: #6ee7c7;
+        background: rgba(18, 87, 73, 0.34);
+      }
+
+      .badge.warn {
+        border-color: rgba(245, 197, 111, 0.5);
+        color: #f5c56f;
+        background: rgba(122, 82, 21, 0.28);
+      }
+
       .metrics {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
       }
+
       .metric,
       .panel {
-        border: 1px solid #d7e0e5;
+        border: 1px solid rgba(126, 155, 170, 0.22);
         border-radius: 8px;
-        background: #ffffff;
-        box-shadow: 0 8px 18px rgba(30, 45, 55, 0.045);
+        background: rgba(12, 20, 27, 0.96);
+        box-shadow:
+          0 18px 50px rgba(0, 0, 0, 0.24),
+          inset 0 1px 0 rgba(255, 255, 255, 0.025);
       }
+
       .metric {
         display: grid;
         gap: 8px;
-        min-height: 104px;
-        padding: 14px;
+        min-height: 108px;
+        padding: 15px;
       }
+
       .label {
-        color: #66727a;
+        color: #8fa2ad;
         font-size: 12px;
       }
+
       .value {
-        font-size: 24px;
-        line-height: 1.1;
-        font-weight: 700;
+        color: #f5f9fb;
+        font-size: 28px;
+        line-height: 1.05;
+        font-weight: 850;
         overflow-wrap: anywhere;
       }
+
       .delta {
-        color: #68757d;
+        color: #90a3ae;
         font-size: 12px;
       }
-      .delta.good {
-        color: #0f7b5f;
+
+      .good {
+        color: #6ee7c7;
       }
-      .delta.bad {
-        color: #b3261e;
+
+      .bad {
+        color: #ff7d75;
       }
-      .grid {
+
+      .workspace {
         display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+        grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
         gap: 12px;
       }
+
       .panel {
-        min-height: 240px;
+        min-height: 230px;
         padding: 14px;
       }
+
       .panel.wide {
         grid-column: span 2;
       }
+
       .panel-head {
         display: flex;
         align-items: center;
@@ -216,71 +294,129 @@
         gap: 10px;
         margin-bottom: 12px;
       }
+
       .panel h2 {
-        font-size: 14px;
+        color: #f5f9fb;
+        font-size: 15px;
         line-height: 1.2;
       }
+
       .hint {
-        color: #74818a;
+        color: #7d919c;
         font-size: 12px;
       }
-      .market-summary {
+
+      .market-panel {
+        min-height: 430px;
+        background:
+          linear-gradient(155deg, rgba(16, 28, 38, 0.98), rgba(8, 13, 18, 0.98)),
+          radial-gradient(circle at top right, rgba(43, 132, 255, 0.18), transparent 36%);
+        perspective: 900px;
+      }
+
+      .market-topline,
+      .rule-grid,
+      .service-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
         margin-bottom: 12px;
       }
-      .summary-cell {
-        border: 1px solid #e1e8ec;
-        border-radius: 7px;
-        background: #f8fafb;
-        padding: 9px;
+
+      .stat-cell,
+      .rule-card,
+      .service-card {
         display: grid;
-        gap: 4px;
+        gap: 5px;
+        min-height: 68px;
+        padding: 10px;
+        border: 1px solid rgba(126, 155, 170, 0.2);
+        border-radius: 8px;
+        background: rgba(8, 14, 19, 0.72);
       }
-      .summary-cell strong {
-        font-size: 14px;
+
+      .stat-cell strong,
+      .rule-card strong,
+      .service-card strong {
+        color: #f5f9fb;
+        font-size: 16px;
         overflow-wrap: anywhere;
       }
+
       .price-chart {
-        min-height: 220px;
-        border: 1px solid #e1e8ec;
+        display: grid;
+        min-height: 272px;
+        border: 1px solid rgba(126, 155, 170, 0.22);
         border-radius: 8px;
-        background: linear-gradient(180deg, #ffffff 0%, #f7fafb 100%);
-        margin-bottom: 12px;
+        background:
+          linear-gradient(180deg, rgba(7, 13, 18, 0.9), rgba(11, 19, 26, 0.92)),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        background-size: auto, 56px 56px, 56px 56px;
         overflow: hidden;
+        transform: rotateX(0deg) translateZ(0);
       }
+
       .chart-svg {
         display: block;
         width: 100%;
-        height: 220px;
+        height: 272px;
       }
-      .table-wrap {
-        overflow-x: auto;
+
+      .mini-feed {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
       }
+
+      .feed-card {
+        min-height: 72px;
+        padding: 10px;
+        border: 1px solid rgba(126, 155, 170, 0.18);
+        border-radius: 8px;
+        background: rgba(4, 8, 12, 0.48);
+      }
+
+      .feed-card strong {
+        display: block;
+        margin-top: 5px;
+        color: #e6edf2;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+        gap: 12px;
+      }
+
       .chart-wrap {
         display: grid;
         grid-template-columns: 180px minmax(0, 1fr);
         gap: 16px;
         align-items: center;
       }
+
       .donut {
         width: 164px;
         height: 164px;
         border-radius: 50%;
-        background: conic-gradient(#0f6b57 0deg, #d9e2e7 0deg);
+        background: conic-gradient(#22c49e 0deg, #24333c 0deg);
         display: grid;
         place-items: center;
         position: relative;
+        box-shadow: inset 0 -18px 26px rgba(0, 0, 0, 0.22);
       }
+
       .donut::after {
         content: "";
-        width: 104px;
-        height: 104px;
+        width: 108px;
+        height: 108px;
         border-radius: 50%;
-        background: #ffffff;
+        background: #0c141b;
         position: absolute;
       }
+
       .donut-text {
         position: relative;
         z-index: 1;
@@ -288,20 +424,25 @@
         justify-items: center;
         gap: 2px;
       }
+
       .donut-text strong {
-        font-size: 22px;
+        color: #f5f9fb;
+        font-size: 24px;
       }
+
       .legend {
         display: grid;
-        gap: 8px;
+        gap: 9px;
       }
+
       .legend-row,
       .position-row {
         display: grid;
-        grid-template-columns: 86px minmax(0, 1fr) 86px;
+        grid-template-columns: 92px minmax(0, 1fr) 92px;
         gap: 10px;
         align-items: center;
       }
+
       .swatch {
         display: inline-block;
         width: 10px;
@@ -310,136 +451,275 @@
         margin-right: 6px;
         vertical-align: -1px;
       }
+
       .swatch.position {
-        background: #0f6b57;
+        background: #22c49e;
       }
+
       .swatch.cash {
-        background: #d9e2e7;
+        background: #3b5260;
       }
+
       .bar-track {
         height: 10px;
         border-radius: 999px;
-        background: #ecf0f2;
+        background: #1d2b34;
         overflow: hidden;
       }
+
       .bar {
         height: 100%;
         min-width: 2px;
         border-radius: 999px;
       }
-      .bar.good {
-        background: #0f7b5f;
+
+      .bar.good,
+      .bar.position {
+        background: #22c49e;
       }
+
       .bar.bad {
-        background: #c24135;
+        background: #d94f45;
       }
+
       .bar.cash {
-        background: #d9e2e7;
+        background: #3b5260;
       }
-      .good {
-        color: #0f7b5f;
+
+      .table-wrap {
+        overflow-x: auto;
       }
-      .bad {
-        color: #b3261e;
-      }
+
       .table {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
       }
+
       .table th,
       .table td {
         padding: 10px 8px;
-        border-bottom: 1px solid #edf1f3;
+        border-bottom: 1px solid rgba(126, 155, 170, 0.14);
         text-align: left;
         vertical-align: top;
       }
+
       .table th {
-        color: #66727a;
+        color: #90a3ae;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 800;
       }
+
       .mono {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
+
+      .empty,
+      .note {
+        color: #93a6b1;
+        padding: 16px;
+        border: 1px dashed rgba(126, 155, 170, 0.3);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.42);
+        line-height: 1.45;
+      }
+
+      .signal-state {
+        display: grid;
+        gap: 12px;
+      }
+
+      .signal-hero {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 78px;
+        padding: 12px;
+        border: 1px solid rgba(126, 155, 170, 0.2);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.6);
+      }
+
+      .signal-hero strong {
+        color: #f5f9fb;
+        font-size: 24px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        border-radius: 999px;
+        padding: 5px 9px;
+        color: #111;
+        background: #6ee7c7;
+        font-size: 12px;
+        font-weight: 850;
+        white-space: nowrap;
+      }
+
+      .pill.none {
+        color: #f5f9fb;
+        background: #334853;
+      }
+
+      .pill.blocked {
+        color: #190b07;
+        background: #f5c56f;
+      }
+
+      .pill.sell {
+        color: #fff4f2;
+        background: #d94f45;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .small-card {
+        min-height: 64px;
+        padding: 10px;
+        border: 1px solid rgba(126, 155, 170, 0.18);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.52);
+      }
+
+      .small-card strong {
+        display: block;
+        margin-top: 5px;
+        color: #f5f9fb;
+      }
+
+      details {
+        margin-top: 12px;
+      }
+
+      summary {
+        color: #7fd9c7;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
       pre {
-        margin: 0;
+        margin: 10px 0 0;
+        max-height: 170px;
+        overflow: auto;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
+        color: #aabac3;
         font-size: 12px;
-        color: #29343a;
       }
-      .compact-pre {
-        max-height: 160px;
-        overflow: auto;
-        padding-top: 10px;
-        border-top: 1px solid #edf1f3;
-      }
-      .empty {
-        color: #77858d;
-        padding: 18px;
-        border: 1px dashed #cfd8de;
-        border-radius: 8px;
-        background: #fbfcfd;
-      }
-      @media (max-width: 920px) {
-        .metrics,
-        .terminal-strip,
-        .grid {
-          grid-template-columns: 1fr 1fr;
-        }
-        .chart-wrap {
+
+      @media (max-width: 1080px) {
+        .hero,
+        .command-bar,
+        .workspace,
+        .split {
           grid-template-columns: 1fr;
         }
-      }
-      @media (max-width: 640px) {
-        .shell {
-          padding: 12px;
+
+        .hero-board {
+          min-width: 0;
+          border-left: 0;
+          border-top: 1px solid rgba(126, 155, 170, 0.18);
         }
-        .top,
-        .toolbar {
-          align-items: stretch;
-          flex-direction: column;
-        }
-        .status-row {
-          justify-content: flex-start;
-        }
+
         .metrics,
-        .terminal-strip,
-        .grid {
-          grid-template-columns: 1fr;
+        .market-topline,
+        .rule-grid,
+        .service-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
+
         .panel.wide {
           grid-column: span 1;
         }
-        .market-summary {
-          grid-template-columns: 1fr 1fr;
+
+        .updated {
+          justify-self: start;
         }
+      }
+
+      @media (max-width: 680px) {
+        .shell {
+          padding: 12px;
+        }
+
+        .hero-copy,
+        .hero-board {
+          padding: 14px;
+        }
+
+        .hero-board,
+        .metrics,
+        .market-topline,
+        .mini-feed,
+        .rule-grid,
+        .service-grid,
+        .two-col,
+        .chart-wrap {
+          grid-template-columns: 1fr;
+        }
+
+        .actions,
+        .market-controls,
+        button,
+        input,
+        select {
+          width: 100%;
+        }
+
         .value {
-          font-size: 21px;
+          font-size: 23px;
         }
       }
     </style>
   </head>
   <body>
     <main class="shell">
-      <section class="top">
-        <div class="title">
-          <h1>JARVIS Algo Trader</h1>
-          <p class="subtitle">Paper-trading command center with deterministic risk controls and advisory AI analysis.</p>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">JARVIS Algo Trader</p>
+          <h1>Paper Trading Control Desk</h1>
+          <p class="subtitle">
+            VWAP signal engine, Alpaca paper account, Yahoo research data, strict risk manager, and ChatGPT advisory tools in one control panel.
+          </p>
+          <div class="status-row">
+            <span class="badge ok" id="modeBadge">Paper mode</span>
+            <span class="badge" id="apiBadge">API checking</span>
+            <span class="badge" id="dataBadge">Data checking</span>
+            <span class="badge warn" id="riskBadge">Manual approval</span>
+          </div>
         </div>
-        <div class="status-row">
-          <span class="badge ok" id="modeBadge">paper-only</span>
-          <span class="badge" id="apiBadge">API checking</span>
-          <span class="badge" id="dataBadge">market data checking</span>
-          <span class="badge warn" id="riskBadge">manual approval</span>
+        <div class="hero-board">
+          <div class="status-tile ok">
+            <span>Execution</span>
+            <strong>Paper only</strong>
+          </div>
+          <div class="status-tile ok">
+            <span>AI role</span>
+            <strong>Advisor</strong>
+          </div>
+          <div class="status-tile warn">
+            <span>Live trading</span>
+            <strong>Disabled</strong>
+          </div>
+          <div class="status-tile ok">
+            <span>Risk gate</span>
+            <strong>Code locked</strong>
+          </div>
         </div>
       </section>
 
-      <section class="toolbar">
+      <section class="command-bar">
         <div class="actions">
           <button id="refresh">Refresh dashboard</button>
-          <button id="runSignal" class="secondary">Run sample signal</button>
+          <button id="runSignal" class="secondary">Run VWAP sample</button>
         </div>
         <div class="market-controls">
           <input id="symbolInput" value="SPY" aria-label="Symbol" maxlength="12" />
@@ -449,29 +729,10 @@
             <option value="massive">Massive</option>
             <option value="finnhub">Finnhub</option>
           </select>
-          <button id="loadMarket" class="secondary">Load market data</button>
-          <button id="runScreener" class="secondary">Screen volume spikes</button>
+          <button id="loadMarket" class="secondary">Load chart</button>
+          <button id="runScreener" class="secondary">Run screener</button>
         </div>
         <span class="updated" id="updated">Not loaded yet</span>
-      </section>
-
-      <section class="terminal-strip" aria-label="System guardrails">
-        <div class="strip-item">
-          <strong>Execution</strong>
-          <span>Paper trading only, live disabled</span>
-        </div>
-        <div class="strip-item">
-          <strong>Risk Gate</strong>
-          <span>0.5% per trade, 2% daily stop</span>
-        </div>
-        <div class="strip-item">
-          <strong>Market Data</strong>
-          <span>Yahoo default, delayed research feed</span>
-        </div>
-        <div class="strip-item">
-          <strong>AI Role</strong>
-          <span>Advisory analysis, no solo orders</span>
-        </div>
       </section>
 
       <section class="metrics">
@@ -483,12 +744,12 @@
         <article class="metric">
           <span class="label">Cash</span>
           <strong class="value" id="cashValue">$0.00</strong>
-          <span class="delta">Paper account</span>
+          <span class="delta">Paper account balance</span>
         </article>
         <article class="metric">
           <span class="label">Buying power</span>
           <strong class="value" id="buyingPower">$0.00</strong>
-          <span class="delta">Risk checked before orders</span>
+          <span class="delta">Checked before every paper order</span>
         </article>
         <article class="metric">
           <span class="label">Open orders</span>
@@ -497,70 +758,76 @@
         </article>
       </section>
 
-      <section class="grid">
-        <article class="panel">
+      <section class="workspace">
+        <article class="panel wide market-panel">
           <div class="panel-head">
-            <h2>Allocation</h2>
-            <span class="hint">cash vs positions</span>
+            <h2>Market Data Terminal</h2>
+            <span class="hint">auto-loaded delayed research feed</span>
           </div>
-          <div class="chart-wrap">
-            <div class="donut" id="allocationDonut">
-              <div class="donut-text">
-                <strong id="investedPct">0%</strong>
-                <span class="label">invested</span>
-              </div>
-            </div>
-            <div class="legend" id="allocationLegend"></div>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Risk Gate</h2>
-            <span class="hint">hard rules stay in code</span>
-          </div>
-          <pre id="risk">
-Trading mode: paper
-Manual approval: required
-Live trading: disabled in v1</pre>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Position P/L</h2>
-            <span class="hint">unrealized paper P/L</span>
-          </div>
-          <div class="legend" id="positionsChart">
-            <div class="empty">No positions loaded yet.</div>
-          </div>
-        </article>
-
-        <article class="panel wide">
-          <div class="panel-head">
-            <h2>Market Data</h2>
-            <span class="hint">Yahoo / Finnhub / Massive adapters</span>
-          </div>
-          <div class="market-summary" id="marketSummary">
-            <div class="summary-cell"><span class="label">Symbol</span><strong>-</strong></div>
-            <div class="summary-cell"><span class="label">Provider</span><strong>-</strong></div>
-            <div class="summary-cell"><span class="label">Last price</span><strong>-</strong></div>
-            <div class="summary-cell"><span class="label">Volume</span><strong>-</strong></div>
+          <div class="market-topline" id="marketSummary">
+            <div class="stat-cell"><span class="label">Symbol</span><strong>SPY</strong></div>
+            <div class="stat-cell"><span class="label">Provider</span><strong>Loading</strong></div>
+            <div class="stat-cell"><span class="label">Last price</span><strong>-</strong></div>
+            <div class="stat-cell"><span class="label">Volume</span><strong>-</strong></div>
           </div>
           <div class="price-chart" id="priceChart">
-            <div class="empty">Load market data to draw the chart.</div>
+            <div class="empty">Chart is loading automatically.</div>
           </div>
-          <pre class="compact-pre" id="marketData">Provider status not loaded yet.</pre>
+          <div class="mini-feed" id="marketData">
+            <div class="feed-card"><span class="label">Feed</span><strong>Checking</strong></div>
+            <div class="feed-card"><span class="label">Delay</span><strong>-</strong></div>
+            <div class="feed-card"><span class="label">Bars</span><strong>-</strong></div>
+          </div>
         </article>
 
         <article class="panel wide">
           <div class="panel-head">
             <h2>Stock Screener</h2>
-            <span class="hint">daily volume spike scan</span>
+            <span class="hint">Yahoo daily volume spike scan</span>
           </div>
           <div class="table-wrap" id="screenerTable">
-            <div class="empty">Run the screener to rank volume activity.</div>
+            <div class="empty">Screener is loading automatically.</div>
           </div>
-          <pre class="compact-pre" id="screener">No screener run yet.</pre>
+          <details>
+            <summary>Screener raw details</summary>
+            <pre id="screener">No screener run yet.</pre>
+          </details>
+        </article>
+
+        <div class="split panel wide">
+          <article>
+            <div class="panel-head">
+              <h2>Allocation</h2>
+              <span class="hint">cash vs positions</span>
+            </div>
+            <div class="chart-wrap">
+              <div class="donut" id="allocationDonut">
+                <div class="donut-text">
+                  <strong id="investedPct">0%</strong>
+                  <span class="label">invested</span>
+                </div>
+              </div>
+              <div class="legend" id="allocationLegend"></div>
+            </div>
+          </article>
+
+          <article>
+            <div class="panel-head">
+              <h2>Position P/L</h2>
+              <span class="hint">unrealized paper P/L</span>
+            </div>
+            <div class="legend" id="positionsChart">
+              <div class="empty">No positions loaded yet.</div>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Risk Gate</h2>
+            <span class="hint">readable rules</span>
+          </div>
+          <div id="risk" class="rule-grid"></div>
         </article>
 
         <article class="panel">
@@ -568,7 +835,9 @@ Live trading: disabled in v1</pre>
             <h2>Signal Monitor</h2>
             <span class="hint">VWAP strategy sample</span>
           </div>
-          <pre id="signal">No signal run yet.</pre>
+          <div id="signal" class="signal-state">
+            <div class="empty">Signal check is loading automatically.</div>
+          </div>
         </article>
 
         <article class="panel">
@@ -576,23 +845,25 @@ Live trading: disabled in v1</pre>
             <h2>Trade Journal</h2>
             <span class="hint">Supabase journal</span>
           </div>
-          <div id="journal" class="empty">No journal loaded yet.</div>
+          <div id="journal" class="empty">Journal is loading.</div>
         </article>
 
         <article class="panel">
           <div class="panel-head">
-            <h2>System</h2>
+            <h2>System Health</h2>
             <span class="hint">service checks</span>
           </div>
-          <pre id="system">Loading service status...</pre>
+          <div id="system" class="service-grid"></div>
         </article>
       </section>
     </main>
 
     <script type="module">
       const apiBase = location.hostname.includes("onrender.com") ? "" : "https://jarvis-api-5roc.onrender.com";
+      const mcpStatusUrl = "https://jarvis-mcp-pwxy.onrender.com/status";
       const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
       const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+      const integer = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
       const el = {
         modeBadge: document.getElementById("modeBadge"),
@@ -647,6 +918,7 @@ Live trading: disabled in v1</pre>
 
       async function loadDashboard() {
         setBusy(true);
+        setLoadingCards();
         try {
           const [health, portfolio, journal, providers] = await Promise.all([
             getJson("/health"),
@@ -662,45 +934,62 @@ Live trading: disabled in v1</pre>
         } catch (error) {
           el.apiBadge.textContent = "API error";
           el.apiBadge.className = "badge warn";
-          el.system.textContent = error.message;
+          renderSystemCards([
+            ["API", "Error", "warn"],
+            ["MCP", "Check /status", "warn"],
+            ["Reason", error.message, "warn"],
+            ["Mode", "Paper", "ok"]
+          ]);
         } finally {
           setBusy(false);
         }
+
+        await Promise.allSettled([loadMarketSnapshot({ auto: true }), runVolumeScreener({ auto: true }), runSampleSignal({ auto: true })]);
       }
 
-      async function loadMarketSnapshot() {
-        el.loadMarket.disabled = true;
-        el.marketData.textContent = "Loading market data...";
+      async function loadMarketSnapshot(options = {}) {
+        if (!options.auto) el.loadMarket.disabled = true;
+        el.marketData.innerHTML = feedCards([
+          ["Feed", "Loading"],
+          ["Delay", "-"],
+          ["Bars", "-"]
+        ]);
         try {
           const symbol = encodeURIComponent(el.symbolInput.value.trim() || "SPY");
           const provider = encodeURIComponent(el.providerSelect.value || "auto");
           const data = await getJson(`/api/market/snapshot?symbol=${symbol}&timeframe=1&limit=80&provider=${provider}`);
           renderMarketSnapshot(data);
-          if (data.signal) el.signal.textContent = pretty(data.signal);
+          if (data.signal) renderSignal(data.signal);
         } catch (error) {
-          el.marketData.textContent = error.message;
+          el.marketData.innerHTML = feedCards([
+            ["Feed", "Error"],
+            ["Reason", error.message],
+            ["Action", "Try refresh"]
+          ]);
+          el.priceChart.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
         } finally {
           el.loadMarket.disabled = false;
         }
       }
 
-      async function runVolumeScreener() {
-        el.runScreener.disabled = true;
-        el.screener.textContent = "Screening daily volume spikes...";
+      async function runVolumeScreener(options = {}) {
+        if (!options.auto) el.runScreener.disabled = true;
+        el.screenerTable.innerHTML = '<div class="empty">Scanning SPY, QQQ, AAPL, MSFT, NVDA, TSLA, AMD, META, AMZN, GOOGL.</div>';
         try {
           const symbols = encodeURIComponent("SPY,QQQ,AAPL,MSFT,NVDA,TSLA,AMD,META,AMZN,GOOGL");
           const data = await getJson(`/api/screener/volume-spikes?symbols=${symbols}&lookbackDays=20&volumeMultiplier=2&provider=yahoo`);
           renderScreener(data);
         } catch (error) {
+          el.screenerTable.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
           el.screener.textContent = error.message;
         } finally {
           el.runScreener.disabled = false;
         }
       }
 
-      async function runSampleSignal() {
-        el.runSignal.disabled = true;
-        el.signal.textContent = "Running deterministic VWAP sample...";
+      async function runSampleSignal(options = {}) {
+        if (!options.auto) el.runSignal.disabled = true;
+        renderSignal({ signal: "CHECKING", reason: "running_vwap_sample" });
         try {
           const data = await postJson("/api/strategy/evaluate", {
             bars: [
@@ -716,33 +1005,43 @@ Live trading: disabled in v1</pre>
               atrPeriod: 2
             }
           });
-          el.signal.textContent = pretty(data.signal);
+          renderSignal(data.signal || {});
         } catch (error) {
-          el.signal.textContent = error.message;
+          renderSignal({ signal: "ERROR", reason: error.message });
         } finally {
           el.runSignal.disabled = false;
         }
       }
 
+      function setLoadingCards() {
+        renderRiskCards({ tradingMode: "paper", riskLocked: false, requireManualApproval: true });
+        renderSystemCards([
+          ["API", "Checking", ""],
+          ["MCP", "Checking", ""],
+          ["Data", "Checking", ""],
+          ["Trading", "Paper only", "ok"]
+        ]);
+      }
+
       function renderHealth(health) {
-        el.modeBadge.textContent = health.mode || "paper";
+        el.modeBadge.textContent = health.mode === "paper" ? "Paper mode" : String(health.mode || "paper");
         el.apiBadge.textContent = health.ok ? "API online" : "API offline";
         el.apiBadge.className = health.ok ? "badge ok" : "badge warn";
-        el.system.textContent = pretty({
-          api: health.service,
-          mode: health.mode,
-          mcp: "https://jarvis-mcp-pwxy.onrender.com/mcp",
-          app: "https://jarvis-api-5roc.onrender.com"
-        });
+        renderSystemCards([
+          ["API", health.ok ? "Online" : "Offline", health.ok ? "ok" : "warn"],
+          ["MCP", "Status page", "ok", mcpStatusUrl],
+          ["Mode", health.mode || "paper", "ok"],
+          ["Live trading", "Disabled", "warn"]
+        ]);
       }
 
       function renderPortfolio(data) {
         const account = data.account || {};
         const positions = Array.isArray(data.positions) ? data.positions : [];
         const equity = toNumber(account.portfolio_value || account.equity);
-        const lastEquity = toNumber(account.last_equity);
+        const lastEquity = toNumber(account.last_equity || equity);
         const cash = toNumber(account.cash);
-        const buyingPower = toNumber(account.buying_power || account.effective_buying_power);
+        const buyingPower = toNumber(account.buying_power || account.effective_buying_power || account.regt_buying_power);
         const positionValue = positions.reduce((sum, position) => sum + Math.abs(toNumber(position.market_value)), 0);
         const invested = equity > 0 ? Math.min(100, (positionValue / equity) * 100) : 0;
         const delta = equity - lastEquity;
@@ -754,142 +1053,231 @@ Live trading: disabled in v1</pre>
         el.accountState.textContent = `Account ${account.status || "unknown"}`;
         el.portfolioDelta.textContent = `${delta >= 0 ? "+" : ""}${money.format(delta)} vs last equity`;
         el.portfolioDelta.className = `delta ${delta >= 0 ? "good" : "bad"}`;
-        el.riskBadge.textContent = data.riskLocked ? "risk locked" : "risk clear";
+        el.riskBadge.textContent = data.riskLocked ? "Risk locked" : "Risk clear";
         el.riskBadge.className = data.riskLocked ? "badge warn" : "badge ok";
-        el.risk.textContent = pretty({
+
+        renderRiskCards({
           tradingMode: data.mode,
           riskLocked: data.riskLocked,
           accountBlocked: Boolean(account.account_blocked),
           tradingBlocked: Boolean(account.trading_blocked),
-          manualApproval: "required",
-          liveTrading: "disabled"
+          requireManualApproval: true
         });
 
         el.investedPct.textContent = `${number.format(invested)}%`;
-        el.allocationDonut.style.background = `conic-gradient(#0f6b57 0deg ${invested * 3.6}deg, #d9e2e7 ${invested * 3.6}deg 360deg)`;
+        el.allocationDonut.style.background = `conic-gradient(#22c49e 0deg ${invested * 3.6}deg, #24333c ${invested * 3.6}deg 360deg)`;
         el.allocationLegend.innerHTML = [
-          legendRow("position", "Positions", money.format(positionValue)),
-          legendRow("cash", "Cash", money.format(cash))
+          legendRow("position", "Positions", money.format(positionValue), invested),
+          legendRow("cash", "Cash", money.format(cash), 100)
         ].join("");
         renderPositions(positions);
+      }
+
+      function renderRiskCards(data) {
+        el.risk.innerHTML = [
+          ruleCard("Mode", data.tradingMode || "paper", data.tradingMode === "paper" || !data.tradingMode ? "ok" : "warn"),
+          ruleCard("Manual approval", data.requireManualApproval ? "Required" : "Off", data.requireManualApproval ? "warn" : "ok"),
+          ruleCard("Daily stop", "2% max loss", "warn"),
+          ruleCard("Loss limit", "3 in a row", "warn"),
+          ruleCard("Live trading", "Disabled", "warn"),
+          ruleCard("Account", data.accountBlocked || data.tradingBlocked ? "Blocked" : "Clear", data.accountBlocked || data.tradingBlocked ? "warn" : "ok")
+        ].join("");
       }
 
       function renderProviders(data) {
         const providers = Array.isArray(data.providers) ? data.providers : [];
         const configured = providers.filter((provider) => provider.configured && provider.supportsBars);
-        el.dataBadge.textContent = configured.length ? `${configured.length} data provider${configured.length > 1 ? "s" : ""}` : "data keys needed";
+        el.dataBadge.textContent = configured.length ? `${configured.length} data provider` : "Data key needed";
         el.dataBadge.className = configured.length ? "badge ok" : "badge warn";
-        el.marketSummary.innerHTML = summaryCells([
+        el.marketSummary.innerHTML = statCells([
           ["Default", data.defaultProvider || "auto"],
           ["Symbol", data.defaultSymbol || "SPY"],
           ["Active feeds", String(configured.length)],
           ["Mode", "research"]
         ]);
-        el.marketData.textContent = pretty({
-          defaultProvider: data.defaultProvider,
-          defaultSymbol: data.defaultSymbol,
-          providers
-        });
+        el.marketData.innerHTML = feedCards(
+          providers.slice(0, 3).map((provider) => [
+            provider.name,
+            provider.configured ? `${provider.dataDelayMinutes}m delay` : "not configured"
+          ])
+        );
       }
 
       function renderMarketSnapshot(data) {
-        el.dataBadge.textContent = data.provider === "none" ? "data unavailable" : `${data.providerName} data`;
+        el.dataBadge.textContent = data.provider === "none" ? "Data unavailable" : `${data.providerName} data`;
         el.dataBadge.className = data.provider === "none" ? "badge warn" : "badge ok";
-        el.marketData.textContent = pretty({
-          symbol: data.symbol,
-          provider: data.providerName,
-          delayed: data.delayed,
-          dataDelayMinutes: data.dataDelayMinutes,
-          barCount: data.barCount,
-          lastBar: data.bars?.[data.bars.length - 1],
-          quote: data.quote,
-          errors: data.errors
-        });
         const lastBar = data.bars?.[data.bars.length - 1] || {};
-        el.marketSummary.innerHTML = summaryCells([
+        const quote = data.quote || {};
+        const price = toNumber(quote.price || lastBar.close);
+        const change = toNumber(quote.change);
+        const changePct = toNumber(quote.changePercent);
+        el.marketSummary.innerHTML = statCells([
           ["Symbol", data.symbol || "-"],
           ["Provider", data.providerName || "-"],
-          ["Last price", money.format(toNumber(data.quote?.price || lastBar.close))],
-          ["Volume", number.format(toNumber(data.quote?.volume || lastBar.volume))]
+          ["Last price", money.format(price)],
+          ["Volume", integer.format(toNumber(quote.volume || lastBar.volume))]
+        ]);
+        el.marketData.innerHTML = feedCards([
+          ["Feed status", data.provider === "none" ? "Unavailable" : "Online"],
+          ["Data delay", `${data.dataDelayMinutes || 0} minutes`],
+          ["Bars loaded", String(data.barCount || 0)],
+          ["Change", `${change >= 0 ? "+" : ""}${money.format(change)}`],
+          ["Change pct", `${changePct >= 0 ? "+" : ""}${number.format(changePct)}%`],
+          ["Signal", data.signal?.signal || "NONE"]
         ]);
         renderPriceChart(data.bars || []);
       }
 
       function renderScreener(data) {
         renderScreenerTable(data.results || []);
+        const top = (data.results || []).slice(0, 5).map((row) => ({
+          symbol: row.symbol,
+          volumeRatio: row.volumeRatio,
+          isSpike: row.isSpike
+        }));
         el.screener.textContent = pretty({
           provider: data.providerName,
           mode: data.mode,
           scanned: data.scanned,
           volumeMultiplier: data.volumeMultiplier,
-          matches: data.matches,
-          topResults: data.results?.slice(0, 10),
+          spikes: data.matches?.length || 0,
+          topResults: top,
           errors: data.errors
         });
+      }
+
+      function renderSignal(signal) {
+        const status = String(signal.signal || "NONE").toUpperCase();
+        const reason = signal.reason || signal.analystNote || "waiting_for_market_data";
+        const tone = status === "BUY" ? "buy" : status === "SELL" || status === "ERROR" ? "sell" : status === "BLOCKED" ? "blocked" : "none";
+        el.signal.innerHTML = `
+          <div class="signal-hero">
+            <div>
+              <span class="label">Current signal</span>
+              <strong>${escapeHtml(status)}</strong>
+            </div>
+            <span class="pill ${tone}">${escapeHtml(tone === "buy" ? "Risk review needed" : status)}</span>
+          </div>
+          <div class="note">${escapeHtml(humanReason(reason))}</div>
+          <div class="two-col">
+            ${smallCard("Entry", formatOptionalMoney(signal.entry))}
+            ${smallCard("Stop loss", formatOptionalMoney(signal.sl))}
+            ${smallCard("Take profit", formatOptionalMoney(signal.tp))}
+            ${smallCard("Order rule", "No order without risk approval")}
+          </div>
+        `;
+      }
+
+      function renderJournal(data) {
+        const trades = Array.isArray(data.trades) ? data.trades : [];
+        if (!trades.length) {
+          el.journal.className = "note";
+          el.journal.innerHTML = `
+            <strong>No closed paper trades yet.</strong>
+            <p class="label">Closed TP, SL, and time-exit trades will appear here after Alpaca and Supabase sync. Open positions are shown in Position P/L.</p>
+          `;
+          return;
+        }
+        el.journal.className = "";
+        el.journal.innerHTML = `
+          <table class="table">
+            <thead><tr><th>Symbol</th><th>Side</th><th>P/L</th><th>Exit</th></tr></thead>
+            <tbody>
+              ${trades
+                .map(
+                  (trade) => `
+                    <tr>
+                      <td><strong>${escapeHtml(trade.symbol || "-")}</strong></td>
+                      <td>${escapeHtml(trade.side || "-")}</td>
+                      <td class="${toNumber(trade.pnl) >= 0 ? "good" : "bad"}">${money.format(toNumber(trade.pnl))}</td>
+                      <td>${escapeHtml(trade.exit_reason || "-")}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
+      function renderSystemCards(cards) {
+        el.system.innerHTML = cards.map(([label, value, tone, href]) => serviceCard(label, value, tone, href)).join("");
       }
 
       function renderPriceChart(bars) {
         const clean = bars.filter((bar) => Number.isFinite(Number(bar.close))).slice(-80);
         if (clean.length < 2) {
-          el.priceChart.innerHTML = '<div class="empty">Not enough bars to draw a chart.</div>';
+          el.priceChart.innerHTML = '<div class="empty">Not enough bars to draw the chart yet.</div>';
           return;
         }
-        const width = 720;
-        const height = 220;
-        const pad = 22;
+        const width = 900;
+        const height = 272;
+        const pad = 28;
+        const volumeHeight = 46;
         const closes = clean.map((bar) => Number(bar.close));
         const volumes = clean.map((bar) => Number(bar.volume || 0));
         const min = Math.min(...closes);
         const max = Math.max(...closes);
         const maxVolume = Math.max(...volumes, 1);
         const priceRange = max - min || 1;
+        const chartHeight = height - pad * 2 - volumeHeight;
         const points = clean
           .map((bar, index) => {
             const x = pad + (index / (clean.length - 1)) * (width - pad * 2);
-            const y = pad + ((max - Number(bar.close)) / priceRange) * (height - pad * 2 - 48);
+            const y = pad + ((max - Number(bar.close)) / priceRange) * chartHeight;
             return `${x.toFixed(1)},${y.toFixed(1)}`;
           })
           .join(" ");
+        const fillPoints = `${pad},${height - pad - volumeHeight} ${points} ${width - pad},${height - pad - volumeHeight}`;
         const volumeBars = clean
           .map((bar, index) => {
             const x = pad + (index / clean.length) * (width - pad * 2);
             const barWidth = Math.max(2, (width - pad * 2) / clean.length - 2);
-            const barHeight = (Number(bar.volume || 0) / maxVolume) * 36;
+            const barHeight = (Number(bar.volume || 0) / maxVolume) * 38;
             const y = height - pad - barHeight;
-            return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="1" fill="#cbd7dc"></rect>`;
+            return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="1.5" fill="rgba(126,155,170,0.42)"></rect>`;
           })
           .join("");
-        const color = closes[closes.length - 1] >= closes[0] ? "#0f7b5f" : "#c24135";
+        const color = closes[closes.length - 1] >= closes[0] ? "#22c49e" : "#d94f45";
         el.priceChart.innerHTML = `
           <svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Price and volume chart">
-            <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" stroke="#dce5e9"></line>
-            <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="#dce5e9"></line>
-            <text x="${pad}" y="16" fill="#66727a" font-size="12">${money.format(max)}</text>
-            <text x="${pad}" y="${height - 6}" fill="#66727a" font-size="12">${money.format(min)}</text>
+            <defs>
+              <linearGradient id="priceFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="${color}" stop-opacity="0.28"></stop>
+                <stop offset="100%" stop-color="${color}" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" stroke="rgba(126,155,170,0.22)"></line>
+            <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="rgba(126,155,170,0.22)"></line>
+            <text x="${pad}" y="18" fill="#90a3ae" font-size="12">${money.format(max)}</text>
+            <text x="${pad}" y="${height - 8}" fill="#90a3ae" font-size="12">${money.format(min)}</text>
             ${volumeBars}
-            <polyline fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}"></polyline>
+            <polygon fill="url(#priceFill)" points="${fillPoints}"></polygon>
+            <polyline fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" points="${points}"></polyline>
+            <circle cx="${points.split(" ").at(-1)?.split(",")[0]}" cy="${points.split(" ").at(-1)?.split(",")[1]}" r="5" fill="${color}"></circle>
           </svg>
         `;
       }
 
       function renderScreenerTable(results) {
         if (!results.length) {
-          el.screenerTable.innerHTML = '<div class="empty">No symbols returned from the screener.</div>';
+          el.screenerTable.innerHTML = '<div class="empty">No symbols returned from Yahoo screener. Try refresh after market data responds.</div>';
           return;
         }
         el.screenerTable.innerHTML = `
           <table class="table">
-            <thead><tr><th>Symbol</th><th>Ratio</th><th>Volume</th><th>Avg volume</th><th>Close</th><th>Status</th></tr></thead>
+            <thead><tr><th>Rank</th><th>Symbol</th><th>Volume ratio</th><th>Volume</th><th>Avg volume</th><th>Close</th><th>Status</th></tr></thead>
             <tbody>
               ${results
-                .slice(0, 12)
+                .slice(0, 14)
                 .map(
-                  (row) => `
+                  (row, index) => `
                     <tr>
+                      <td class="mono">${index + 1}</td>
                       <td><strong>${escapeHtml(row.symbol || "-")}</strong></td>
                       <td class="mono">${number.format(toNumber(row.volumeRatio))}x</td>
-                      <td>${number.format(toNumber(row.currentVolume))}</td>
-                      <td>${number.format(toNumber(row.averageVolume))}</td>
+                      <td>${integer.format(toNumber(row.currentVolume))}</td>
+                      <td>${integer.format(toNumber(row.averageVolume))}</td>
                       <td>${money.format(toNumber(row.close))}</td>
                       <td class="${row.isSpike ? "bad" : "good"}">${row.isSpike ? "SPIKE" : "normal"}</td>
                     </tr>
@@ -903,7 +1291,7 @@ Live trading: disabled in v1</pre>
 
       function renderPositions(positions) {
         if (!positions.length) {
-          el.positionsChart.innerHTML = '<div class="empty">No open positions.</div>';
+          el.positionsChart.innerHTML = '<div class="empty">No open paper positions.</div>';
           return;
         }
         const maxAbs = Math.max(...positions.map((position) => Math.abs(toNumber(position.unrealized_pl))), 1);
@@ -923,42 +1311,13 @@ Live trading: disabled in v1</pre>
           .join("");
       }
 
-      function renderJournal(data) {
-        const trades = Array.isArray(data.trades) ? data.trades : [];
-        if (!trades.length) {
-          el.journal.className = "empty";
-          el.journal.textContent = "No closed trades in journal yet.";
-          return;
-        }
-        el.journal.className = "";
-        el.journal.innerHTML = `
-          <table class="table">
-            <thead><tr><th>Symbol</th><th>Side</th><th>P/L</th><th>Exit</th></tr></thead>
-            <tbody>
-              ${trades
-                .map(
-                  (trade) => `
-                    <tr>
-                      <td>${escapeHtml(trade.symbol || "-")}</td>
-                      <td>${escapeHtml(trade.side || "-")}</td>
-                      <td>${money.format(toNumber(trade.pnl))}</td>
-                      <td>${escapeHtml(trade.exit_reason || "-")}</td>
-                    </tr>
-                  `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        `;
-      }
-
       function renderToolResult(data) {
         if (data.account || data.positions) renderPortfolio(data);
         if (data.providers) renderProviders(data);
         if (data.bars || data.quote || data.provider) renderMarketSnapshot(data);
         if (data.matches || data.results) renderScreener(data);
-        if (data.status || data.orderPlan || data.reason) el.risk.textContent = pretty(data);
-        if (data.signal || data.analystNote) el.signal.textContent = pretty(data);
+        if (data.status || data.orderPlan || data.reason) renderRiskCards(data);
+        if (data.signal || data.analystNote) renderSignal(data.signal || data);
         if (data.trades || data.note) renderJournal(data);
       }
 
@@ -983,21 +1342,41 @@ Live trading: disabled in v1</pre>
         el.refresh.textContent = isBusy ? "Refreshing..." : "Refresh dashboard";
       }
 
-      function legendRow(kind, label, value) {
-        return `<div class="legend-row"><span><span class="swatch ${kind}"></span>${label}</span><div class="bar-track"><div class="bar ${kind}" style="width:100%"></div></div><strong>${value}</strong></div>`;
+      function ruleCard(label, value, tone) {
+        return `<div class="rule-card"><span class="label">${escapeHtml(label)}</span><strong class="${tone === "warn" ? "bad" : "good"}">${escapeHtml(value)}</strong></div>`;
       }
 
-      function summaryCells(entries) {
-        return entries
-          .map(
-            ([label, value]) => `
-              <div class="summary-cell">
-                <span class="label">${escapeHtml(label)}</span>
-                <strong>${escapeHtml(value)}</strong>
-              </div>
-            `
-          )
-          .join("");
+      function serviceCard(label, value, tone, href) {
+        const content = `<span class="label">${escapeHtml(label)}</span><strong class="${tone === "warn" ? "bad" : "good"}">${escapeHtml(value)}</strong>`;
+        if (href) return `<a class="service-card" href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${content}</a>`;
+        return `<div class="service-card">${content}</div>`;
+      }
+
+      function smallCard(label, value) {
+        return `<div class="small-card"><span class="label">${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+      }
+
+      function feedCards(entries) {
+        return entries.map(([label, value]) => `<div class="feed-card"><span class="label">${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+      }
+
+      function statCells(entries) {
+        return entries.map(([label, value]) => `<div class="stat-cell"><span class="label">${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+      }
+
+      function legendRow(kind, label, value, width) {
+        return `<div class="legend-row"><span><span class="swatch ${kind}"></span>${escapeHtml(label)}</span><div class="bar-track"><div class="bar ${kind}" style="width:${Math.max(4, Math.min(100, width))}%"></div></div><strong>${escapeHtml(value)}</strong></div>`;
+      }
+
+      function formatOptionalMoney(value) {
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0 ? money.format(n) : "-";
+      }
+
+      function humanReason(reason) {
+        return String(reason || "")
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (letter) => letter.toUpperCase());
       }
 
       function bar(t, open, high, low, close, volume) {
