@@ -11,3 +11,4 @@ if (!inputFile) {
 const bars = JSON.parse(await readFile(inputFile, "utf8"));
 const result = runStrategy(bars, readConfig().strategy);
 console.log(JSON.stringify({ events: result.events, eventCount: result.events.length }, null, 2));
+

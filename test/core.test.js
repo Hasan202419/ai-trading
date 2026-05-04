@@ -4,6 +4,7 @@ import { defaultRiskSettings, defaultStrategySettings } from "../src/config.js";
 import { evaluateRisk } from "../src/core/risk.js";
 import { evaluateLatestSignal, runStrategy } from "../src/core/strategy.js";
 import { OpenAIAnalysisClient } from "../src/llm/openai.js";
+import { MarketDataRouter } from "../src/market/providers.js";
 
 const baseSettings = {
   ...defaultStrategySettings(),
@@ -116,8 +117,150 @@ test("OpenAI analysis client ignores non-OpenAI token prefixes", () => {
   assert.equal(client.isConfigured(), false);
 });
 
+test("market data router maps Massive aggregate bars", async () => {
+  const router = new MarketDataRouter(
+    {
+      yahoo: { enabled: false },
+      providerPriority: ["massive"],
+      massive: { apiKey: "massive-test", baseUrl: "https://api.massive.test", dataDelayMinutes: 15 },
+      finnhub: {},
+      finviz: {}
+    },
+    async (url) => {
+      if (url.includes("/v2/snapshot/")) {
+        return jsonResponse({
+          ticker: {
+            lastTrade: { p: 101.2, t: 1770000000000 },
+            prevDay: { c: 100 },
+            day: { o: 99, h: 102, l: 98, v: 12345 }
+          }
+        });
+      }
+      assert.ok(url.includes("/v2/aggs/ticker/SPY/range/1/minute/"));
+      return jsonResponse({
+        results: [
+          { t: 1770000000000, o: 100, h: 101, l: 99, c: 100.5, v: 1000 },
+          { t: 1770000060000, o: 100.5, h: 102, l: 100, c: 101.8, v: 2500 }
+        ]
+      });
+    }
+  );
+  const snapshot = await router.getSnapshot({ symbol: "spy", provider: "auto", timeframe: "1", limit: 2 });
+  assert.equal(snapshot.provider, "massive");
+  assert.equal(snapshot.dataDelayMinutes, 15);
+  assert.equal(snapshot.bars.length, 2);
+  assert.equal(snapshot.bars[1].close, 101.8);
+  assert.equal(snapshot.quote.price, 101.2);
+});
+
+test("market data router maps Finnhub candles when Massive is unavailable", async () => {
+  const router = new MarketDataRouter(
+    {
+      yahoo: { enabled: false },
+      providerPriority: ["massive", "finnhub"],
+      massive: {},
+      finnhub: { apiKey: "finnhub-test", baseUrl: "https://finnhub.test", dataDelayMinutes: 0 },
+      finviz: {}
+    },
+    async (url) => {
+      if (url.includes("/quote?")) {
+        return jsonResponse({ c: 101.8, pc: 100, o: 99, h: 102, l: 98, t: 1770000060 });
+      }
+      assert.ok(url.includes("/stock/candle?symbol=QQQ"));
+      return jsonResponse({
+        s: "ok",
+        t: [1770000000, 1770000060],
+        o: [100, 100.5],
+        h: [101, 102],
+        l: [99, 100],
+        c: [100.5, 101.8],
+        v: [1000, 2500]
+      });
+    }
+  );
+  const snapshot = await router.getSnapshot({ symbol: "qqq", provider: "auto", timeframe: "1", limit: 2 });
+  assert.equal(snapshot.provider, "finnhub");
+  assert.equal(snapshot.errors[0].provider, "massive");
+  assert.equal(snapshot.bars[0].open, 100);
+  assert.equal(snapshot.quote.previousClose, 100);
+});
+
+test("market data router maps Yahoo Finance chart data", async () => {
+  const router = new MarketDataRouter(
+    {
+      providerPriority: ["yahoo"],
+      yahoo: { enabled: true, baseUrl: "https://query1.finance.test", dataDelayMinutes: 15 },
+      massive: {},
+      finnhub: {},
+      finviz: {}
+    },
+    async (url) => {
+      assert.ok(url.includes("/v8/finance/chart/NVDA"));
+      return jsonResponse(yahooChartResponse([1000, 2500], [100.5, 101.8]));
+    }
+  );
+  const snapshot = await router.getSnapshot({ symbol: "nvda", provider: "auto", timeframe: "1d", limit: 2 });
+  assert.equal(snapshot.provider, "yahoo");
+  assert.equal(snapshot.bars.length, 2);
+  assert.equal(snapshot.bars[1].volume, 2500);
+  assert.equal(snapshot.quote.price, 101.8);
+});
+
+test("Yahoo volume screener detects abnormal volume", async () => {
+  const router = new MarketDataRouter(
+    {
+      providerPriority: ["yahoo"],
+      yahoo: { enabled: true, baseUrl: "https://query1.finance.test", dataDelayMinutes: 15 },
+      massive: {},
+      finnhub: {},
+      finviz: {}
+    },
+    async (url) => {
+      assert.ok(url.includes("/v8/finance/chart/AMD"));
+      return jsonResponse(yahooChartResponse([100, 100, 100, 350], [10, 11, 12, 13]));
+    }
+  );
+  const result = await router.screenVolumeSpikes({ symbols: ["amd"], lookbackDays: 4, volumeMultiplier: 2 });
+  assert.equal(result.scanned, 1);
+  assert.equal(result.matches[0].symbol, "AMD");
+  assert.equal(Number(result.matches[0].volumeRatio.toFixed(2)), 3.5);
+});
+
 function bar(t, open, high, low, close, volume) {
   return { t, open, high, low, close, volume };
+}
+
+function jsonResponse(value) {
+  return {
+    ok: true,
+    async json() {
+      return value;
+    }
+  };
+}
+
+function yahooChartResponse(volumes, closes) {
+  return {
+    chart: {
+      result: [
+        {
+          timestamp: volumes.map((_, index) => 1770000000 + index * 86400),
+          indicators: {
+            quote: [
+              {
+                open: closes.map((close) => close - 1),
+                high: closes.map((close) => close + 1),
+                low: closes.map((close) => close - 2),
+                close: closes,
+                volume: volumes
+              }
+            ]
+          }
+        }
+      ],
+      error: null
+    }
+  };
 }
 
 function buySignal() {

@@ -191,3 +191,4 @@ function average(values) {
 function last(values, count) {
   return values.slice(Math.max(0, values.length - count));
 }
+

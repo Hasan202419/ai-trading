@@ -63,3 +63,4 @@ function roundPrice(value) {
   const decimals = value >= 1 ? 2 : 4;
   return Number(value).toFixed(decimals);
 }
+

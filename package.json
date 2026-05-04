@@ -10,7 +10,8 @@
     "worker": "node src/worker/index.js",
     "mcp": "node src/mcp/server.js",
     "test": "node test/core.test.js",
-    "backtest": "node src/backtest/run-backtest.js"
+    "backtest": "node src/backtest/run-backtest.js",
+    "yfinance:volume": "python scripts/yfinance_volume_spike.py"
   },
   "engines": {
     "node": ">=20"

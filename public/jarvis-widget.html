@@ -17,6 +17,8 @@
       body {
         margin: 0;
         min-width: 320px;
+        background:
+          linear-gradient(180deg, #eef3f5 0%, #f7f9fa 34%, #eef2f4 100%);
       }
       .shell {
         display: grid;
@@ -84,11 +86,55 @@
         border: 1px solid #d7e0e5;
         border-radius: 8px;
         background: #ffffff;
+        box-shadow: 0 10px 24px rgba(30, 45, 55, 0.06);
       }
       .actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+      }
+      .market-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .terminal-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .strip-item {
+        border: 1px solid #d5dee3;
+        border-radius: 8px;
+        background: #132226;
+        color: #e7f1ef;
+        min-height: 74px;
+        padding: 12px;
+        display: grid;
+        align-content: center;
+        gap: 5px;
+      }
+      .strip-item strong {
+        font-size: 13px;
+      }
+      .strip-item span {
+        color: #9db3ad;
+        font-size: 12px;
+      }
+      input,
+      select {
+        min-height: 36px;
+        border: 1px solid #cfd8de;
+        border-radius: 7px;
+        background: #ffffff;
+        color: #182024;
+        font: inherit;
+        font-size: 13px;
+        padding: 8px 10px;
+      }
+      input {
+        width: 92px;
+        text-transform: uppercase;
       }
       button {
         min-height: 36px;
@@ -123,6 +169,7 @@
         border: 1px solid #d7e0e5;
         border-radius: 8px;
         background: #ffffff;
+        box-shadow: 0 8px 18px rgba(30, 45, 55, 0.045);
       }
       .metric {
         display: grid;
@@ -159,6 +206,9 @@
         min-height: 240px;
         padding: 14px;
       }
+      .panel.wide {
+        grid-column: span 2;
+      }
       .panel-head {
         display: flex;
         align-items: center;
@@ -173,6 +223,40 @@
       .hint {
         color: #74818a;
         font-size: 12px;
+      }
+      .market-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .summary-cell {
+        border: 1px solid #e1e8ec;
+        border-radius: 7px;
+        background: #f8fafb;
+        padding: 9px;
+        display: grid;
+        gap: 4px;
+      }
+      .summary-cell strong {
+        font-size: 14px;
+        overflow-wrap: anywhere;
+      }
+      .price-chart {
+        min-height: 220px;
+        border: 1px solid #e1e8ec;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #ffffff 0%, #f7fafb 100%);
+        margin-bottom: 12px;
+        overflow: hidden;
+      }
+      .chart-svg {
+        display: block;
+        width: 100%;
+        height: 220px;
+      }
+      .table-wrap {
+        overflow-x: auto;
       }
       .chart-wrap {
         display: grid;
@@ -285,6 +369,12 @@
         font-size: 12px;
         color: #29343a;
       }
+      .compact-pre {
+        max-height: 160px;
+        overflow: auto;
+        padding-top: 10px;
+        border-top: 1px solid #edf1f3;
+      }
       .empty {
         color: #77858d;
         padding: 18px;
@@ -294,6 +384,7 @@
       }
       @media (max-width: 920px) {
         .metrics,
+        .terminal-strip,
         .grid {
           grid-template-columns: 1fr 1fr;
         }
@@ -314,8 +405,15 @@
           justify-content: flex-start;
         }
         .metrics,
+        .terminal-strip,
         .grid {
           grid-template-columns: 1fr;
+        }
+        .panel.wide {
+          grid-column: span 1;
+        }
+        .market-summary {
+          grid-template-columns: 1fr 1fr;
         }
         .value {
           font-size: 21px;
@@ -333,6 +431,7 @@
         <div class="status-row">
           <span class="badge ok" id="modeBadge">paper-only</span>
           <span class="badge" id="apiBadge">API checking</span>
+          <span class="badge" id="dataBadge">market data checking</span>
           <span class="badge warn" id="riskBadge">manual approval</span>
         </div>
       </section>
@@ -342,7 +441,37 @@
           <button id="refresh">Refresh dashboard</button>
           <button id="runSignal" class="secondary">Run sample signal</button>
         </div>
+        <div class="market-controls">
+          <input id="symbolInput" value="SPY" aria-label="Symbol" maxlength="12" />
+          <select id="providerSelect" aria-label="Market data provider">
+            <option value="auto">Auto</option>
+            <option value="yahoo">Yahoo Finance</option>
+            <option value="massive">Massive</option>
+            <option value="finnhub">Finnhub</option>
+          </select>
+          <button id="loadMarket" class="secondary">Load market data</button>
+          <button id="runScreener" class="secondary">Screen volume spikes</button>
+        </div>
         <span class="updated" id="updated">Not loaded yet</span>
+      </section>
+
+      <section class="terminal-strip" aria-label="System guardrails">
+        <div class="strip-item">
+          <strong>Execution</strong>
+          <span>Paper trading only, live disabled</span>
+        </div>
+        <div class="strip-item">
+          <strong>Risk Gate</strong>
+          <span>0.5% per trade, 2% daily stop</span>
+        </div>
+        <div class="strip-item">
+          <strong>Market Data</strong>
+          <span>Yahoo default, delayed research feed</span>
+        </div>
+        <div class="strip-item">
+          <strong>AI Role</strong>
+          <span>Advisory analysis, no solo orders</span>
+        </div>
       </section>
 
       <section class="metrics">
@@ -406,6 +535,34 @@ Live trading: disabled in v1</pre>
           </div>
         </article>
 
+        <article class="panel wide">
+          <div class="panel-head">
+            <h2>Market Data</h2>
+            <span class="hint">Yahoo / Finnhub / Massive adapters</span>
+          </div>
+          <div class="market-summary" id="marketSummary">
+            <div class="summary-cell"><span class="label">Symbol</span><strong>-</strong></div>
+            <div class="summary-cell"><span class="label">Provider</span><strong>-</strong></div>
+            <div class="summary-cell"><span class="label">Last price</span><strong>-</strong></div>
+            <div class="summary-cell"><span class="label">Volume</span><strong>-</strong></div>
+          </div>
+          <div class="price-chart" id="priceChart">
+            <div class="empty">Load market data to draw the chart.</div>
+          </div>
+          <pre class="compact-pre" id="marketData">Provider status not loaded yet.</pre>
+        </article>
+
+        <article class="panel wide">
+          <div class="panel-head">
+            <h2>Stock Screener</h2>
+            <span class="hint">daily volume spike scan</span>
+          </div>
+          <div class="table-wrap" id="screenerTable">
+            <div class="empty">Run the screener to rank volume activity.</div>
+          </div>
+          <pre class="compact-pre" id="screener">No screener run yet.</pre>
+        </article>
+
         <article class="panel">
           <div class="panel-head">
             <h2>Signal Monitor</h2>
@@ -440,6 +597,7 @@ Live trading: disabled in v1</pre>
       const el = {
         modeBadge: document.getElementById("modeBadge"),
         apiBadge: document.getElementById("apiBadge"),
+        dataBadge: document.getElementById("dataBadge"),
         riskBadge: document.getElementById("riskBadge"),
         updated: document.getElementById("updated"),
         portfolioValue: document.getElementById("portfolioValue"),
@@ -452,12 +610,21 @@ Live trading: disabled in v1</pre>
         investedPct: document.getElementById("investedPct"),
         allocationLegend: document.getElementById("allocationLegend"),
         positionsChart: document.getElementById("positionsChart"),
+        marketSummary: document.getElementById("marketSummary"),
+        priceChart: document.getElementById("priceChart"),
+        marketData: document.getElementById("marketData"),
         risk: document.getElementById("risk"),
         signal: document.getElementById("signal"),
         journal: document.getElementById("journal"),
         system: document.getElementById("system"),
         refresh: document.getElementById("refresh"),
-        runSignal: document.getElementById("runSignal")
+        runSignal: document.getElementById("runSignal"),
+        symbolInput: document.getElementById("symbolInput"),
+        providerSelect: document.getElementById("providerSelect"),
+        loadMarket: document.getElementById("loadMarket"),
+        runScreener: document.getElementById("runScreener"),
+        screenerTable: document.getElementById("screenerTable"),
+        screener: document.getElementById("screener")
       };
 
       window.addEventListener(
@@ -474,19 +641,23 @@ Live trading: disabled in v1</pre>
 
       el.refresh.addEventListener("click", () => loadDashboard());
       el.runSignal.addEventListener("click", () => runSampleSignal());
+      el.loadMarket.addEventListener("click", () => loadMarketSnapshot());
+      el.runScreener.addEventListener("click", () => runVolumeScreener());
       loadDashboard();
 
       async function loadDashboard() {
         setBusy(true);
         try {
-          const [health, portfolio, journal] = await Promise.all([
+          const [health, portfolio, journal, providers] = await Promise.all([
             getJson("/health"),
             getJson("/api/portfolio/status"),
-            getJson("/api/trade-journal")
+            getJson("/api/trade-journal"),
+            getJson("/api/market/providers")
           ]);
           renderHealth(health);
           renderPortfolio(portfolio);
           renderJournal(journal);
+          renderProviders(providers);
           el.updated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
         } catch (error) {
           el.apiBadge.textContent = "API error";
@@ -494,6 +665,36 @@ Live trading: disabled in v1</pre>
           el.system.textContent = error.message;
         } finally {
           setBusy(false);
+        }
+      }
+
+      async function loadMarketSnapshot() {
+        el.loadMarket.disabled = true;
+        el.marketData.textContent = "Loading market data...";
+        try {
+          const symbol = encodeURIComponent(el.symbolInput.value.trim() || "SPY");
+          const provider = encodeURIComponent(el.providerSelect.value || "auto");
+          const data = await getJson(`/api/market/snapshot?symbol=${symbol}&timeframe=1&limit=80&provider=${provider}`);
+          renderMarketSnapshot(data);
+          if (data.signal) el.signal.textContent = pretty(data.signal);
+        } catch (error) {
+          el.marketData.textContent = error.message;
+        } finally {
+          el.loadMarket.disabled = false;
+        }
+      }
+
+      async function runVolumeScreener() {
+        el.runScreener.disabled = true;
+        el.screener.textContent = "Screening daily volume spikes...";
+        try {
+          const symbols = encodeURIComponent("SPY,QQQ,AAPL,MSFT,NVDA,TSLA,AMD,META,AMZN,GOOGL");
+          const data = await getJson(`/api/screener/volume-spikes?symbols=${symbols}&lookbackDays=20&volumeMultiplier=2&provider=yahoo`);
+          renderScreener(data);
+        } catch (error) {
+          el.screener.textContent = error.message;
+        } finally {
+          el.runScreener.disabled = false;
         }
       }
 
@@ -573,6 +774,133 @@ Live trading: disabled in v1</pre>
         renderPositions(positions);
       }
 
+      function renderProviders(data) {
+        const providers = Array.isArray(data.providers) ? data.providers : [];
+        const configured = providers.filter((provider) => provider.configured && provider.supportsBars);
+        el.dataBadge.textContent = configured.length ? `${configured.length} data provider${configured.length > 1 ? "s" : ""}` : "data keys needed";
+        el.dataBadge.className = configured.length ? "badge ok" : "badge warn";
+        el.marketSummary.innerHTML = summaryCells([
+          ["Default", data.defaultProvider || "auto"],
+          ["Symbol", data.defaultSymbol || "SPY"],
+          ["Active feeds", String(configured.length)],
+          ["Mode", "research"]
+        ]);
+        el.marketData.textContent = pretty({
+          defaultProvider: data.defaultProvider,
+          defaultSymbol: data.defaultSymbol,
+          providers
+        });
+      }
+
+      function renderMarketSnapshot(data) {
+        el.dataBadge.textContent = data.provider === "none" ? "data unavailable" : `${data.providerName} data`;
+        el.dataBadge.className = data.provider === "none" ? "badge warn" : "badge ok";
+        el.marketData.textContent = pretty({
+          symbol: data.symbol,
+          provider: data.providerName,
+          delayed: data.delayed,
+          dataDelayMinutes: data.dataDelayMinutes,
+          barCount: data.barCount,
+          lastBar: data.bars?.[data.bars.length - 1],
+          quote: data.quote,
+          errors: data.errors
+        });
+        const lastBar = data.bars?.[data.bars.length - 1] || {};
+        el.marketSummary.innerHTML = summaryCells([
+          ["Symbol", data.symbol || "-"],
+          ["Provider", data.providerName || "-"],
+          ["Last price", money.format(toNumber(data.quote?.price || lastBar.close))],
+          ["Volume", number.format(toNumber(data.quote?.volume || lastBar.volume))]
+        ]);
+        renderPriceChart(data.bars || []);
+      }
+
+      function renderScreener(data) {
+        renderScreenerTable(data.results || []);
+        el.screener.textContent = pretty({
+          provider: data.providerName,
+          mode: data.mode,
+          scanned: data.scanned,
+          volumeMultiplier: data.volumeMultiplier,
+          matches: data.matches,
+          topResults: data.results?.slice(0, 10),
+          errors: data.errors
+        });
+      }
+
+      function renderPriceChart(bars) {
+        const clean = bars.filter((bar) => Number.isFinite(Number(bar.close))).slice(-80);
+        if (clean.length < 2) {
+          el.priceChart.innerHTML = '<div class="empty">Not enough bars to draw a chart.</div>';
+          return;
+        }
+        const width = 720;
+        const height = 220;
+        const pad = 22;
+        const closes = clean.map((bar) => Number(bar.close));
+        const volumes = clean.map((bar) => Number(bar.volume || 0));
+        const min = Math.min(...closes);
+        const max = Math.max(...closes);
+        const maxVolume = Math.max(...volumes, 1);
+        const priceRange = max - min || 1;
+        const points = clean
+          .map((bar, index) => {
+            const x = pad + (index / (clean.length - 1)) * (width - pad * 2);
+            const y = pad + ((max - Number(bar.close)) / priceRange) * (height - pad * 2 - 48);
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+          })
+          .join(" ");
+        const volumeBars = clean
+          .map((bar, index) => {
+            const x = pad + (index / clean.length) * (width - pad * 2);
+            const barWidth = Math.max(2, (width - pad * 2) / clean.length - 2);
+            const barHeight = (Number(bar.volume || 0) / maxVolume) * 36;
+            const y = height - pad - barHeight;
+            return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="1" fill="#cbd7dc"></rect>`;
+          })
+          .join("");
+        const color = closes[closes.length - 1] >= closes[0] ? "#0f7b5f" : "#c24135";
+        el.priceChart.innerHTML = `
+          <svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Price and volume chart">
+            <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${height - pad}" stroke="#dce5e9"></line>
+            <line x1="${pad}" y1="${height - pad}" x2="${width - pad}" y2="${height - pad}" stroke="#dce5e9"></line>
+            <text x="${pad}" y="16" fill="#66727a" font-size="12">${money.format(max)}</text>
+            <text x="${pad}" y="${height - 6}" fill="#66727a" font-size="12">${money.format(min)}</text>
+            ${volumeBars}
+            <polyline fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${points}"></polyline>
+          </svg>
+        `;
+      }
+
+      function renderScreenerTable(results) {
+        if (!results.length) {
+          el.screenerTable.innerHTML = '<div class="empty">No symbols returned from the screener.</div>';
+          return;
+        }
+        el.screenerTable.innerHTML = `
+          <table class="table">
+            <thead><tr><th>Symbol</th><th>Ratio</th><th>Volume</th><th>Avg volume</th><th>Close</th><th>Status</th></tr></thead>
+            <tbody>
+              ${results
+                .slice(0, 12)
+                .map(
+                  (row) => `
+                    <tr>
+                      <td><strong>${escapeHtml(row.symbol || "-")}</strong></td>
+                      <td class="mono">${number.format(toNumber(row.volumeRatio))}x</td>
+                      <td>${number.format(toNumber(row.currentVolume))}</td>
+                      <td>${number.format(toNumber(row.averageVolume))}</td>
+                      <td>${money.format(toNumber(row.close))}</td>
+                      <td class="${row.isSpike ? "bad" : "good"}">${row.isSpike ? "SPIKE" : "normal"}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+
       function renderPositions(positions) {
         if (!positions.length) {
           el.positionsChart.innerHTML = '<div class="empty">No open positions.</div>';
@@ -626,6 +954,9 @@ Live trading: disabled in v1</pre>
 
       function renderToolResult(data) {
         if (data.account || data.positions) renderPortfolio(data);
+        if (data.providers) renderProviders(data);
+        if (data.bars || data.quote || data.provider) renderMarketSnapshot(data);
+        if (data.matches || data.results) renderScreener(data);
         if (data.status || data.orderPlan || data.reason) el.risk.textContent = pretty(data);
         if (data.signal || data.analystNote) el.signal.textContent = pretty(data);
         if (data.trades || data.note) renderJournal(data);
@@ -654,6 +985,19 @@ Live trading: disabled in v1</pre>
 
       function legendRow(kind, label, value) {
         return `<div class="legend-row"><span><span class="swatch ${kind}"></span>${label}</span><div class="bar-track"><div class="bar ${kind}" style="width:100%"></div></div><strong>${value}</strong></div>`;
+      }
+
+      function summaryCells(entries) {
+        return entries
+          .map(
+            ([label, value]) => `
+              <div class="summary-cell">
+                <span class="label">${escapeHtml(label)}</span>
+                <strong>${escapeHtml(value)}</strong>
+              </div>
+            `
+          )
+          .join("");
       }
 
       function bar(t, open, high, low, close, volume) {

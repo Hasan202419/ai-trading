@@ -60,3 +60,4 @@ export function isSessionExit(timestamp, settings) {
     settings.closeHour * 60 + settings.closeMinute - settings.endBeforeCloseMinutes;
   return isWeekday(parts) && parts.minuteOfDay >= end;
 }
+

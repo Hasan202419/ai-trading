@@ -92,15 +92,63 @@ function createMcpServer() {
     "analyze_market_snapshot",
     {
       title: "Analyze Market Snapshot",
-      description: "Use this when the user provides OHLCV bars and wants an advisory-only VWAP/ATR/volume analysis.",
+      description: "Use this when the user provides OHLCV bars or wants JARVIS to fetch market data and produce advisory-only VWAP/ATR/volume analysis.",
       inputSchema: {
         symbol: z.string().default("SPY"),
-        bars: z.array(z.record(z.any()))
+        timeframe: z.string().default("1"),
+        provider: z.enum(["auto", "yahoo", "massive", "finnhub"]).default("auto"),
+        bars: z.array(z.record(z.any())).default([])
       },
       annotations: { readOnlyHint: true },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async (input) => toolResult(await service.analyzeMarketSnapshot(input), "Market snapshot analyzed. No order was placed.")
+  );
+
+  server.registerTool(
+    "get_market_providers",
+    {
+      title: "Get Market Providers",
+      description: "Use this when the user asks which market-data APIs are configured for JARVIS.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+      _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
+    },
+    async () => toolResult(service.getMarketProviders(), "Market-data provider status loaded.")
+  );
+
+  server.registerTool(
+    "get_market_snapshot",
+    {
+      title: "Get Market Snapshot",
+      description: "Fetch read-only delayed or real-time OHLCV data from configured providers and evaluate the deterministic VWAP signal.",
+      inputSchema: {
+        symbol: z.string().default("SPY"),
+        timeframe: z.string().default("1"),
+        limit: z.number().int().min(2).max(500).default(80),
+        provider: z.enum(["auto", "yahoo", "massive", "finnhub"]).default("auto")
+      },
+      annotations: { readOnlyHint: true },
+      _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
+    },
+    async (input) => toolResult(await service.getMarketSnapshot(input), "Market snapshot loaded. No order was placed.")
+  );
+
+  server.registerTool(
+    "screen_volume_spikes",
+    {
+      title: "Screen Volume Spikes",
+      description: "Run a read-only Yahoo/Finviz-style stock screener for abnormal daily volume. It never places orders.",
+      inputSchema: {
+        symbols: z.array(z.string()).default(["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"]),
+        lookbackDays: z.number().int().min(5).max(120).default(20),
+        volumeMultiplier: z.number().min(1).max(20).default(2),
+        provider: z.enum(["yahoo"]).default("yahoo")
+      },
+      annotations: { readOnlyHint: true },
+      _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
+    },
+    async (input) => toolResult(await service.screenStocks(input), "Volume screener finished. No order was placed.")
   );
 
   server.registerTool(

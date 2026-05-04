@@ -76,3 +76,4 @@ export function evaluateRisk({ signal, account, dayStats, settings, manualApprov
 function reject(reason) {
   return { status: RISK_STATUS.REJECTED, reason };
 }
+

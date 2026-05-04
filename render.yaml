@@ -27,6 +27,32 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-5.4-mini
+      - key: MARKET_DATA_PROVIDER
+        value: auto
+      - key: MARKET_DATA_PROVIDER_PRIORITY
+        value: yahoo,massive,finnhub
+      - key: YAHOO_FINANCE_ENABLED
+        value: "true"
+      - key: YAHOO_FINANCE_BASE_URL
+        value: https://query1.finance.yahoo.com
+      - key: YAHOO_FINANCE_DATA_DELAY_MINUTES
+        value: "15"
+      - key: MASSIVE_API_KEY
+        sync: false
+      - key: MASSIVE_BASE_URL
+        value: https://api.massive.com
+      - key: MASSIVE_DATA_DELAY_MINUTES
+        value: "15"
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: FINNHUB_BASE_URL
+        value: https://finnhub.io/api/v1
+      - key: FINNHUB_DATA_DELAY_MINUTES
+        value: "0"
+      - key: FINVIZ_API_KEY
+        sync: false
+      - key: FINVIZ_BASE_URL
+        sync: false
 
   - type: worker
     name: jarvis-worker
@@ -53,6 +79,32 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-5.4-mini
+      - key: MARKET_DATA_PROVIDER
+        value: auto
+      - key: MARKET_DATA_PROVIDER_PRIORITY
+        value: yahoo,massive,finnhub
+      - key: YAHOO_FINANCE_ENABLED
+        value: "true"
+      - key: YAHOO_FINANCE_BASE_URL
+        value: https://query1.finance.yahoo.com
+      - key: YAHOO_FINANCE_DATA_DELAY_MINUTES
+        value: "15"
+      - key: MASSIVE_API_KEY
+        sync: false
+      - key: MASSIVE_BASE_URL
+        value: https://api.massive.com
+      - key: MASSIVE_DATA_DELAY_MINUTES
+        value: "15"
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: FINNHUB_BASE_URL
+        value: https://finnhub.io/api/v1
+      - key: FINNHUB_DATA_DELAY_MINUTES
+        value: "0"
+      - key: FINVIZ_API_KEY
+        sync: false
+      - key: FINVIZ_BASE_URL
+        sync: false
 
   - type: web
     name: jarvis-mcp
@@ -80,6 +132,32 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-5.4-mini
+      - key: MARKET_DATA_PROVIDER
+        value: auto
+      - key: MARKET_DATA_PROVIDER_PRIORITY
+        value: yahoo,massive,finnhub
+      - key: YAHOO_FINANCE_ENABLED
+        value: "true"
+      - key: YAHOO_FINANCE_BASE_URL
+        value: https://query1.finance.yahoo.com
+      - key: YAHOO_FINANCE_DATA_DELAY_MINUTES
+        value: "15"
+      - key: MASSIVE_API_KEY
+        sync: false
+      - key: MASSIVE_BASE_URL
+        value: https://api.massive.com
+      - key: MASSIVE_DATA_DELAY_MINUTES
+        value: "15"
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: FINNHUB_BASE_URL
+        value: https://finnhub.io/api/v1
+      - key: FINNHUB_DATA_DELAY_MINUTES
+        value: "0"
+      - key: FINVIZ_API_KEY
+        sync: false
+      - key: FINVIZ_BASE_URL
+        sync: false
 
   - type: cron
     name: jarvis-research-cron

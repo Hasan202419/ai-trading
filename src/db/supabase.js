@@ -50,3 +50,4 @@ export class SupabaseRestClient {
     return response.json();
   }
 }
+

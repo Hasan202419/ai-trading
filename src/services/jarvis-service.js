@@ -4,6 +4,7 @@ import { evaluateRisk } from "../core/risk.js";
 import { AlpacaClient } from "../broker/alpaca.js";
 import { SupabaseRestClient } from "../db/supabase.js";
 import { OpenAIAnalysisClient } from "../llm/openai.js";
+import { MarketDataRouter } from "../market/providers.js";
 
 export class JarvisService {
   constructor(config = readConfig()) {
@@ -11,6 +12,7 @@ export class JarvisService {
     this.alpaca = new AlpacaClient(config.alpaca);
     this.db = new SupabaseRestClient(config.supabase);
     this.llm = new OpenAIAnalysisClient(config.openai);
+    this.marketData = new MarketDataRouter(config.marketData);
     this.riskSettings = {
       ...defaultRiskSettings(),
       tradingMode: config.tradingMode,
@@ -41,12 +43,79 @@ export class JarvisService {
     };
   }
 
-  async analyzeMarketSnapshot({ symbol = "SPY", bars = [], recentStats = {}, portfolio = null }) {
-    const signal = evaluateLatestSignal(bars, this.config.strategy, null);
+  getMarketProviders() {
+    return {
+      defaultProvider: this.config.marketData.provider,
+      defaultSymbol: this.config.marketData.defaultSymbol,
+      providers: this.marketData.status()
+    };
+  }
+
+  async getMarketSnapshot({
+    symbol = this.config.marketData.defaultSymbol,
+    timeframe = this.config.marketData.defaultTimeframe,
+    limit = 80,
+    provider = this.config.marketData.provider
+  } = {}) {
+    const snapshot = await this.marketData.getSnapshot({ symbol, timeframe, limit, provider });
+    const signal = snapshot.bars.length
+      ? evaluateLatestSignal(snapshot.bars, this.config.strategy, null)
+      : { signal: "NONE", reason: "no_market_data_bars" };
+    await this.saveMarketSnapshot(snapshot);
+    return {
+      ...snapshot,
+      signal: { ...signal, symbol: snapshot.symbol }
+    };
+  }
+
+  async screenStocks({
+    symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"],
+    lookbackDays = 20,
+    volumeMultiplier = 2,
+    provider = "yahoo"
+  } = {}) {
+    const result = await this.marketData.screenVolumeSpikes({
+      symbols: parseSymbols(symbols),
+      lookbackDays,
+      volumeMultiplier,
+      provider
+    });
+    await this.audit("stock_screener_run", {
+      provider: result.provider,
+      scanned: result.scanned,
+      matches: result.matches.map((match) => ({
+        symbol: match.symbol,
+        volumeRatio: match.volumeRatio,
+        currentVolume: match.currentVolume
+      }))
+    });
+    return {
+      ...result,
+      mode: "research_only",
+      note: "Volume spike screener is read-only research. It does not place orders."
+    };
+  }
+
+  async analyzeMarketSnapshot({ symbol = "SPY", bars = [], timeframe = "1", provider = "auto", recentStats = {}, portfolio = null }) {
+    const fetchedSnapshot = bars.length
+      ? null
+      : await this.getMarketSnapshot({ symbol, timeframe, provider, limit: 80 });
+    const sourceBars = bars.length ? bars : fetchedSnapshot.bars;
+    const signal = evaluateLatestSignal(sourceBars, this.config.strategy, null);
+    const resolvedSymbol = fetchedSnapshot?.symbol || symbol;
     const result = {
-      symbol,
-      signal: { ...signal, symbol },
-      analystNote: buildAnalystNote(symbol, signal)
+      symbol: resolvedSymbol,
+      signal: { ...signal, symbol: resolvedSymbol },
+      marketData: fetchedSnapshot
+        ? {
+            provider: fetchedSnapshot.provider,
+            providerName: fetchedSnapshot.providerName,
+            dataDelayMinutes: fetchedSnapshot.dataDelayMinutes,
+            barCount: fetchedSnapshot.barCount,
+            errors: fetchedSnapshot.errors
+          }
+        : { provider: "request_body", barCount: sourceBars.length },
+      analystNote: buildAnalystNote(resolvedSymbol, signal)
     };
     if (!this.llm.isConfigured()) {
       return {
@@ -60,9 +129,9 @@ export class JarvisService {
     }
     try {
       const llmAnalysis = await this.llm.analyzeMarketSnapshot({
-        symbol,
+        symbol: resolvedSymbol,
         signal: result.signal,
-        bars,
+        bars: sourceBars,
         recentStats,
         portfolio
       });
@@ -152,6 +221,29 @@ export class JarvisService {
       created_at: new Date().toISOString()
     });
   }
+
+  async saveMarketSnapshot(snapshot) {
+    if (!this.db.isConfigured() || !snapshot.bars.length) return { skipped: true };
+    return this.db.insert("market_snapshots", {
+      symbol: snapshot.symbol,
+      timeframe: snapshot.timeframe,
+      bars: {
+        provider: snapshot.provider,
+        dataDelayMinutes: snapshot.dataDelayMinutes,
+        fetchedAt: snapshot.fetchedAt,
+        bars: snapshot.bars
+      },
+      created_at: new Date().toISOString()
+    });
+  }
+}
+
+function parseSymbols(symbols) {
+  if (Array.isArray(symbols)) return symbols;
+  return String(symbols || "")
+    .split(/[\s,]+/)
+    .map((symbol) => symbol.trim())
+    .filter(Boolean);
 }
 
 function buildAnalystNote(symbol, signal) {

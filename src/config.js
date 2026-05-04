@@ -28,6 +28,35 @@ export function readConfig(env = process.env) {
       model: loadedEnv.OPENAI_MODEL || "gpt-5.4-mini",
       baseUrl: loadedEnv.OPENAI_BASE_URL || "https://api.openai.com/v1"
     },
+    marketData: {
+      provider: loadedEnv.MARKET_DATA_PROVIDER || "auto",
+      providerPriority: (loadedEnv.MARKET_DATA_PROVIDER_PRIORITY || "yahoo,massive,finnhub")
+        .split(",")
+        .map((provider) => provider.trim())
+        .filter(Boolean),
+      defaultSymbol: loadedEnv.MARKET_DATA_DEFAULT_SYMBOL || "SPY",
+      defaultTimeframe: loadedEnv.MARKET_DATA_DEFAULT_TIMEFRAME || "1",
+      yahoo: {
+        enabled: (loadedEnv.YAHOO_FINANCE_ENABLED || "true") === "true",
+        baseUrl: loadedEnv.YAHOO_FINANCE_BASE_URL || "https://query1.finance.yahoo.com",
+        dataDelayMinutes: Number(loadedEnv.YAHOO_FINANCE_DATA_DELAY_MINUTES || 15)
+      },
+      massive: {
+        apiKey: loadedEnv.MASSIVE_API_KEY || "",
+        baseUrl: loadedEnv.MASSIVE_BASE_URL || "https://api.massive.com",
+        dataDelayMinutes: Number(loadedEnv.MASSIVE_DATA_DELAY_MINUTES || 15)
+      },
+      finnhub: {
+        apiKey: loadedEnv.FINNHUB_API_KEY || "",
+        baseUrl: loadedEnv.FINNHUB_BASE_URL || "https://finnhub.io/api/v1",
+        dataDelayMinutes: Number(loadedEnv.FINNHUB_DATA_DELAY_MINUTES || 0)
+      },
+      finviz: {
+        apiKey: loadedEnv.FINVIZ_API_KEY || "",
+        baseUrl: loadedEnv.FINVIZ_BASE_URL || "",
+        dataDelayMinutes: Number(loadedEnv.FINVIZ_DATA_DELAY_MINUTES || 15)
+      }
+    },
     strategy: defaultStrategySettings()
   };
 }

@@ -12,6 +12,25 @@ const service = new JarvisService(config);
 const routes = {
   "GET /health": async () => ({ ok: true, service: "jarvis-api", mode: config.tradingMode }),
   "GET /api/portfolio/status": async () => service.getPortfolioStatus(),
+  "GET /api/market/providers": async () => service.getMarketProviders(),
+  "GET /api/market/snapshot": async (_body, req) => {
+    const params = new URL(req.url, "http://localhost").searchParams;
+    return service.getMarketSnapshot({
+      symbol: params.get("symbol") || undefined,
+      timeframe: params.get("timeframe") || undefined,
+      limit: params.get("limit") || undefined,
+      provider: params.get("provider") || undefined
+    });
+  },
+  "GET /api/screener/volume-spikes": async (_body, req) => {
+    const params = new URL(req.url, "http://localhost").searchParams;
+    return service.screenStocks({
+      symbols: params.get("symbols") || undefined,
+      lookbackDays: params.get("lookbackDays") || undefined,
+      volumeMultiplier: params.get("volumeMultiplier") || undefined,
+      provider: params.get("provider") || undefined
+    });
+  },
   "GET /api/trade-journal": async () => service.getTradeJournal(20),
   "POST /api/strategy/evaluate": async (body) => {
     const signal = evaluateLatestSignal(body.bars || [], { ...config.strategy, ...(body.settings || {}) });
@@ -47,7 +66,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     const body = await readJson(req);
-    const result = await handler(body);
+    const result = await handler(body, req);
     json(res, 200, result);
   } catch (error) {
     json(res, 500, { error: error.message });

@@ -18,3 +18,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   tick().catch((error) => console.error(error));
   setInterval(() => tick().catch((error) => console.error(error)), config.workerIntervalMs);
 }
+
