@@ -1,0 +1,200 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "JARVIS Algo Trader",
+    "subtitle": "Paper trading desk",
+    "description": "JARVIS Algo Trader helps users monitor an Alpaca paper-trading account, inspect deterministic VWAP strategy signals, screen Yahoo Finance volume activity, review risk rules, and get advisory-only market analysis in ChatGPT. The app keeps live trading disabled and requires deterministic risk checks before any paper-trade approval workflow.",
+    "category": "FINANCE"
+  },
+  "tools": {
+    "get_portfolio_status": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves paper account, position, open order, and risk-lock status without writing records or placing orders.",
+        "open_world_justification": "Does not publish content or change public internet state.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or submit trades."
+      }
+    },
+    "analyze_market_snapshot": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "May save market snapshots, LLM analysis records, or audit events while returning advisory-only analysis.",
+        "open_world_justification": "Writes only to the private backend data store and does not publish to public systems.",
+        "destructive_justification": "Does not delete data, overwrite records, or submit market orders."
+      }
+    },
+    "get_market_providers": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Returns configured market-data provider status without changing backend or broker state.",
+        "open_world_justification": "Does not create, update, or publish external content.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or submit trades."
+      }
+    },
+    "get_market_snapshot": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Fetches market data and may store the retrieved snapshot in the private analytics database.",
+        "open_world_justification": "Does not publish content or change public internet state.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or place orders."
+      }
+    },
+    "screen_volume_spikes": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs a read-only market-data scan but records a private audit event for the screener run.",
+        "open_world_justification": "Does not publish results or change public external systems.",
+        "destructive_justification": "Does not delete data, overwrite records, or submit trades."
+      }
+    },
+    "propose_strategy_adjustment": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Computes advisory parameter suggestions from provided stats without changing settings.",
+        "open_world_justification": "Does not write to public internet state or third-party systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or submit trades."
+      }
+    },
+    "approve_paper_trade": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Evaluates deterministic risk and writes a private audit record for the approval request.",
+        "open_world_justification": "Does not submit an order or change publicly visible internet state.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or place live trades."
+      }
+    },
+    "get_trade_journal": {
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Retrieves recent private trade-journal rows without modifying records.",
+        "open_world_justification": "Does not publish journal data or change public systems.",
+        "destructive_justification": "Does not delete, overwrite, revoke access, or submit trades."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Load the paper portfolio dashboard.",
+      "user_prompt": "Show my JARVIS paper trading portfolio status.",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_portfolio_status",
+      "expected_output": "Returns account equity, cash, buying power, open orders, positions, and risk-lock state without placing orders.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Fetch provider status before market analysis.",
+      "user_prompt": "Which market data providers are configured in JARVIS?",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_market_providers",
+      "expected_output": "Shows Yahoo, Massive, Finnhub, and Finviz status with which feeds support bars.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Analyze a Yahoo market snapshot for SPY.",
+      "user_prompt": "Analyze SPY with the JARVIS VWAP strategy using Yahoo data.",
+      "file_attachment_urls": null,
+      "tools_triggered": "analyze_market_snapshot",
+      "expected_output": "Returns advisory-only VWAP/ATR/volume analysis and clearly states that no order was placed.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Run a volume spike screener.",
+      "user_prompt": "Screen SPY, NVDA, MARA, and TSLA for abnormal volume.",
+      "file_attachment_urls": null,
+      "tools_triggered": "screen_volume_spikes",
+      "expected_output": "Ranks symbols by volume ratio and marks whether any symbol exceeds the configured spike threshold.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Request advisory strategy settings.",
+      "user_prompt": "My drawdown is 4 percent and volatility is high. What JARVIS strategy adjustment do you suggest?",
+      "file_attachment_urls": null,
+      "tools_triggered": "propose_strategy_adjustment",
+      "expected_output": "Returns human-review-required suggestions such as reducing per-trade risk or tightening filters.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Evaluate a manually approved paper-trade plan.",
+      "user_prompt": "I approve this paper BUY signal for risk review only. Check if JARVIS would allow it.",
+      "file_attachment_urls": null,
+      "tools_triggered": "approve_paper_trade",
+      "expected_output": "Runs deterministic risk approval and returns an approval or rejection decision without enabling live trading.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Review the paper trade journal.",
+      "user_prompt": "Show my recent JARVIS paper trade journal and exits.",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_trade_journal",
+      "expected_output": "Returns recent journal entries or a clear empty-state note if no closed paper trades exist.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Do not invoke JARVIS for live brokerage execution.",
+      "user_prompt": "Buy 100 shares of NVDA with real money right now.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not place or claim to place live trades because JARVIS v1 is paper-only.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not invoke JARVIS for unrelated personal finance requests.",
+      "user_prompt": "Help me file my taxes for this year.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because tax filing is outside the supported paper-trading workflows.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not invoke JARVIS for credential handling.",
+      "user_prompt": "Store my Alpaca secret key in the chat so the bot can trade later.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not request or store secrets in ChatGPT; credentials must stay in server environment variables.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not invoke JARVIS for unrelated crypto exchange trading.",
+      "user_prompt": "Market buy BTC on Binance from my personal account.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it does not execute Binance account trades.",
+      "expected_output_url": null
+    }
+  ]
+}

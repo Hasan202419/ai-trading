@@ -93,7 +93,7 @@ function createMcpServer() {
       title: "Get Portfolio Status",
       description: "Use this when the user asks for account, position, open order, P/L, or risk lock status.",
       inputSchema: {},
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async () => toolResult(await service.getPortfolioStatus(), "Portfolio status loaded.")
@@ -110,7 +110,7 @@ function createMcpServer() {
         provider: z.enum(["auto", "yahoo", "massive", "finnhub"]).default("auto"),
         bars: z.array(z.record(z.any())).default([])
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async (input) => toolResult(await service.analyzeMarketSnapshot(input), "Market snapshot analyzed. No order was placed.")
@@ -122,7 +122,7 @@ function createMcpServer() {
       title: "Get Market Providers",
       description: "Use this when the user asks which market-data APIs are configured for JARVIS.",
       inputSchema: {},
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async () => toolResult(service.getMarketProviders(), "Market-data provider status loaded.")
@@ -139,7 +139,7 @@ function createMcpServer() {
         limit: z.number().int().min(2).max(500).default(80),
         provider: z.enum(["auto", "yahoo", "massive", "finnhub"]).default("auto")
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async (input) => toolResult(await service.getMarketSnapshot(input), "Market snapshot loaded. No order was placed.")
@@ -156,7 +156,7 @@ function createMcpServer() {
         volumeMultiplier: z.number().min(1).max(20).default(2),
         provider: z.enum(["yahoo"]).default("yahoo")
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async (input) => toolResult(await service.screenStocks(input), "Volume screener finished. No order was placed.")
@@ -171,7 +171,7 @@ function createMcpServer() {
         recentStats: z.record(z.any()).default({}),
         marketMode: z.enum(["normal", "high_volatility", "low_liquidity", "news_risk"]).default("normal")
       },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async (input) => toolResult(service.proposeStrategyAdjustment(input), "Strategy adjustment proposal prepared for human review.")
@@ -188,7 +188,7 @@ function createMcpServer() {
         account: z.record(z.any()),
         dayStats: z.record(z.any()).default({})
       },
-      annotations: { destructiveHint: false, openWorldHint: true },
+      annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async (input) => toolResult(await service.approvePaperTrade(input), "Paper-trade approval was evaluated by the risk manager.")
@@ -200,7 +200,7 @@ function createMcpServer() {
       title: "Get Trade Journal",
       description: "Use this when the user asks for recent trades, exits, mistakes, or audit history.",
       inputSchema: { limit: z.number().int().min(1).max(100).default(20) },
-      annotations: { readOnlyHint: true },
+      annotations: { readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
     },
     async ({ limit }) => toolResult(await service.getTradeJournal(limit), "Trade journal loaded.")
