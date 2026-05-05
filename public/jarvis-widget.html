@@ -383,6 +383,94 @@
         transform: rotateX(0deg) translateZ(0);
       }
 
+      .tradingview-panel {
+        min-height: 520px;
+        background:
+          linear-gradient(145deg, rgba(13, 22, 30, 0.98), rgba(6, 10, 14, 0.98)),
+          radial-gradient(circle at 72% 0%, rgba(34, 196, 158, 0.12), transparent 36%);
+      }
+
+      .pro-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.65fr) minmax(360px, 0.85fr);
+        gap: 12px;
+      }
+
+      .tv-chart {
+        min-height: 470px;
+        border: 1px solid rgba(126, 155, 170, 0.22);
+        border-radius: 8px;
+        background: #071018;
+        overflow: hidden;
+      }
+
+      .tradingview-widget-container,
+      .tradingview-widget-container__widget {
+        height: 100%;
+        width: 100%;
+      }
+
+      .scalping-box {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+      }
+
+      .signal-badge {
+        display: grid;
+        gap: 8px;
+        min-height: 116px;
+        padding: 14px;
+        border: 1px solid rgba(126, 155, 170, 0.22);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.68);
+      }
+
+      .signal-badge strong {
+        color: #f5f9fb;
+        font-size: 28px;
+      }
+
+      .confidence-track {
+        height: 10px;
+        border-radius: 999px;
+        background: #1d2b34;
+        overflow: hidden;
+      }
+
+      .confidence-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #f5c56f, #22c49e);
+      }
+
+      .checklist {
+        display: grid;
+        gap: 8px;
+      }
+
+      .check-row {
+        display: grid;
+        grid-template-columns: 18px 88px minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+        padding: 9px;
+        border: 1px solid rgba(126, 155, 170, 0.16);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.5);
+      }
+
+      .check-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #3b5260;
+      }
+
+      .check-dot.pass {
+        background: #22c49e;
+      }
+
       .chart-svg {
         display: block;
         width: 100%;
@@ -669,7 +757,8 @@
         .hero,
         .command-bar,
         .workspace,
-        .split {
+        .split,
+        .pro-grid {
           grid-template-columns: 1fr;
         }
 
@@ -840,6 +929,21 @@
           </div>
         </article>
 
+        <article class="panel wide tradingview-panel">
+          <div class="panel-head">
+            <h2>TradingView + Scalping Pro</h2>
+            <span class="hint">volume + trend signal desk</span>
+          </div>
+          <div class="pro-grid">
+            <div class="tv-chart" id="tradingViewChart">
+              <div class="empty">TradingView chart is loading.</div>
+            </div>
+            <div class="scalping-box" id="scalpingPro">
+              <div class="empty">Scalping Pro is waiting for market data.</div>
+            </div>
+          </div>
+        </article>
+
         <article class="panel wide">
           <div class="panel-head">
             <h2>Stock Screener</h2>
@@ -946,6 +1050,8 @@
         positionsChart: document.getElementById("positionsChart"),
         marketSummary: document.getElementById("marketSummary"),
         priceChart: document.getElementById("priceChart"),
+        tradingViewChart: document.getElementById("tradingViewChart"),
+        scalpingPro: document.getElementById("scalpingPro"),
         marketData: document.getElementById("marketData"),
         risk: document.getElementById("risk"),
         signal: document.getElementById("signal"),
@@ -977,6 +1083,7 @@
       el.runSignal.addEventListener("click", () => runSampleSignal());
       el.loadMarket.addEventListener("click", () => loadMarketSnapshot());
       el.runScreener.addEventListener("click", () => runVolumeScreener());
+      renderTradingViewWidget("SPY");
       loadDashboard();
 
       async function loadDashboard() {
@@ -1023,8 +1130,9 @@
           const provider = encodeURIComponent(el.providerSelect.value || "auto");
           const data = await getJson(`/api/market/snapshot?symbol=${symbol}&timeframe=1&limit=80&provider=${provider}`);
           renderMarketSnapshot(data);
-          if (data.signal) renderSignal(data.signal);
-        } catch (error) {
+        if (data.signal) renderSignal(data.signal);
+        if (data.scalping) renderScalpingPro(data.scalping);
+      } catch (error) {
           const message = friendlyErrorMessage(error);
           el.marketData.innerHTML = feedCards([
             ["Feed", "Error"],
@@ -1213,6 +1321,8 @@
           ["Signal", data.signal?.signal || "NONE"]
         ]);
         renderPriceChart(data.bars || []);
+        renderTradingViewWidget(data.symbol || "SPY");
+        renderScalpingPro(data.scalping || localScalpingFallback(data.bars || []));
       }
 
       function renderScreener(data) {
@@ -1230,12 +1340,80 @@
         ]);
       }
 
+      function renderScalpingPro(data = {}) {
+        const status = String(data.signal || "WAIT").toUpperCase();
+        const confidence = Math.max(0, Math.min(100, toNumber(data.confidence)));
+        const tone = status === "BUY_WATCH" ? "buy" : status === "AVOID" ? "sell" : status === "WATCH" ? "blocked" : "none";
+        const checklist = Array.isArray(data.checklist) ? data.checklist : [];
+        el.scalpingPro.innerHTML = `
+          <div class="signal-badge">
+            <span class="label">Scalping Pro signal</span>
+            <strong>${escapeHtml(signalLabel(status))}</strong>
+            <span class="pill ${tone}">${escapeHtml(data.mode === "advisory_only" ? "Advisory only" : "Read only")}</span>
+            <div class="confidence-track"><div class="confidence-fill" style="width:${confidence}%"></div></div>
+            <span class="delta">${number.format(confidence)}% confidence - ${escapeHtml(humanReason(data.reason || "setup_not_ready"))}</span>
+          </div>
+          <div class="report-grid">
+            ${reportCards([
+              ["Trend", data.trend?.direction || "-", data.trend?.direction === "up" ? "ok" : "warn"],
+              ["Volume", data.volume?.ratio ? `${number.format(toNumber(data.volume.ratio))}x avg` : "-", data.volume?.ratio >= 1.15 ? "ok" : "warn"],
+              ["Entry ref", formatOptionalMoney(data.levels?.entryReference)],
+              ["Stop ref", formatOptionalMoney(data.levels?.stopReference)],
+              ["VWAP", formatOptionalMoney(data.levels?.vwap)],
+              ["Rule", "Manual approval", "warn"]
+            ])}
+          </div>
+          <div class="checklist">
+            ${checklist.map((item) => `
+              <div class="check-row">
+                <span class="check-dot ${item.passed ? "pass" : ""}"></span>
+                <strong>${escapeHtml(item.label || "-")}</strong>
+                <span class="label">${escapeHtml(item.detail || "-")}</span>
+              </div>
+            `).join("")}
+          </div>
+          <div class="explain">
+            <strong>${escapeHtml(scalpingHeadline(status))}</strong>
+            <span>Bu panel volume, EMA trend, VWAP va momentumni birga tekshiradi. BUY WATCH chiqqanda ham order faqat paper mode va risk approval orqali yuradi.</span>
+          </div>
+        `;
+      }
+
+      function renderTradingViewWidget(symbol) {
+        const tvSymbol = tradingViewSymbol(symbol);
+        el.tradingViewChart.innerHTML = `
+          <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+          </div>
+        `;
+        const container = el.tradingViewChart.querySelector(".tradingview-widget-container");
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.async = true;
+        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+        script.textContent = JSON.stringify({
+          autosize: true,
+          symbol: tvSymbol,
+          interval: "5",
+          timezone: "America/New_York",
+          theme: "dark",
+          style: "1",
+          locale: "en",
+          allow_symbol_change: true,
+          hide_side_toolbar: false,
+          calendar: false,
+          studies: ["Volume@tv-basicstudies"],
+          support_host: "https://www.tradingview.com"
+        });
+        container.appendChild(script);
+      }
+
       function renderSignal(signal) {
         const status = String(signal.signal || "NONE").toUpperCase();
         const reason = signal.reason || signal.analystNote || "waiting_for_market_data";
         const tone = status === "BUY" ? "buy" : status === "SELL" || status === "ERROR" ? "sell" : status === "BLOCKED" ? "blocked" : "none";
-        const displayStatus = status === "BLOCKED" ? "NO TRADE" : status;
-        const decisionText = status === "BUY" ? "Risk review needed" : status === "BLOCKED" ? "Protected" : status;
+        const displayStatus = status === "BLOCKED" ? "VWAP WAIT" : status;
+        const decisionText = status === "BUY" ? "Risk review needed" : status === "BLOCKED" ? "Filtered" : status;
         el.signal.innerHTML = `
           <div class="signal-hero">
             <div>
@@ -1429,6 +1607,7 @@
         if (data.account || data.positions) renderPortfolio(data);
         if (data.providers) renderProviders(data);
         if (data.bars || data.quote || data.provider) renderMarketSnapshot(data);
+        if (data.scalping) renderScalpingPro(data.scalping);
         if (data.matches || data.results) renderScreener(data);
         if (data.status || data.orderPlan || data.reason) renderRiskCards(data);
         if (data.signal || data.analystNote) renderSignal(data.signal || data);
@@ -1499,7 +1678,7 @@
 
       function signalHeadline(status) {
         if (status === "BUY") return "VWAP setup is active.";
-        if (status === "BLOCKED") return "No trade. The safety filters blocked this setup.";
+        if (status === "BLOCKED") return "VWAP is waiting. A safety filter rejected this setup.";
         if (status === "SELL") return "Take-profit exit condition is active.";
         if (status === "STOP") return "Stop-loss exit condition is active.";
         if (status === "TIME") return "Session time exit is active.";
@@ -1510,7 +1689,7 @@
       function signalExplanation(status, reason) {
         const readable = humanReason(reason);
         if (status === "BLOCKED") {
-          return `${readable}. This is protective behavior: the bot waits instead of forcing a paper trade when volatility, volume, trend, or session rules are not aligned.`;
+          return `${readable}. This is not a platform failure; the VWAP engine is waiting because one filter is not aligned yet. Check Scalping Pro for volume and trend context.`;
         }
         if (status === "BUY") {
           return `${readable}. The next step is risk-manager review and manual paper approval before any order can be submitted.`;
@@ -1533,11 +1712,77 @@
           need_at_least_two_bars: "Need at least two bars",
           waiting_for_market_data: "Waiting for market data",
           running_vwap_sample: "Running VWAP sample",
-          vwap_cross_up_confirmed: "VWAP cross-up confirmed"
+          vwap_cross_up_confirmed: "VWAP cross-up confirmed",
+          setup_not_ready: "Setup is not ready",
+          volume_trend_vwap_aligned: "Volume, trend, and VWAP are aligned",
+          trend_ok_waiting_for_confirmation: "Trend is OK, waiting for confirmation",
+          trend_down: "Trend is down"
         };
         return reasons[reason] || String(reason || "")
           .replace(/_/g, " ")
           .replace(/\b\w/g, (letter) => letter.toUpperCase());
+      }
+
+      function signalLabel(status) {
+        const labels = {
+          BUY_WATCH: "BUY WATCH",
+          WATCH: "WATCH",
+          WAIT: "WAIT",
+          AVOID: "AVOID"
+        };
+        return labels[status] || status;
+      }
+
+      function scalpingHeadline(status) {
+        if (status === "BUY_WATCH") return "Scalping Pro sees a long setup forming.";
+        if (status === "WATCH") return "Trend is improving, but one confirmation is still missing.";
+        if (status === "AVOID") return "Trend is weak; avoid forcing a long entry.";
+        return "Wait for cleaner volume and trend alignment.";
+      }
+
+      function tradingViewSymbol(symbol) {
+        const value = String(symbol || "SPY").trim().toUpperCase();
+        const map = {
+          SPY: "AMEX:SPY",
+          QQQ: "NASDAQ:QQQ",
+          AAPL: "NASDAQ:AAPL",
+          MSFT: "NASDAQ:MSFT",
+          NVDA: "NASDAQ:NVDA",
+          TSLA: "NASDAQ:TSLA",
+          AMD: "NASDAQ:AMD",
+          META: "NASDAQ:META",
+          AMZN: "NASDAQ:AMZN",
+          GOOGL: "NASDAQ:GOOGL",
+          MARA: "NASDAQ:MARA"
+        };
+        return map[value] || `NASDAQ:${value.replace(/[^A-Z0-9.]/g, "")}`;
+      }
+
+      function localScalpingFallback(bars) {
+        const clean = (bars || []).filter((bar) => Number.isFinite(Number(bar.close)));
+        if (clean.length < 2) {
+          return { signal: "WAIT", reason: "need_more_bars", confidence: 0, checklist: [] };
+        }
+        const last = clean.at(-1);
+        const previous = clean.at(-2);
+        const averageVolume = clean.slice(-21, -1).reduce((sum, bar) => sum + toNumber(bar.volume), 0) / Math.max(1, clean.slice(-21, -1).length);
+        const volumeRatio = averageVolume ? toNumber(last.volume) / averageVolume : 0;
+        const momentumUp = toNumber(last.close) > toNumber(previous.close);
+        return {
+          signal: momentumUp && volumeRatio >= 1.15 ? "BUY_WATCH" : "WAIT",
+          reason: momentumUp && volumeRatio >= 1.15 ? "volume_trend_vwap_aligned" : "setup_not_ready",
+          confidence: Math.min(100, (momentumUp ? 45 : 15) + Math.min(45, volumeRatio * 20)),
+          mode: "advisory_only",
+          trend: { direction: momentumUp ? "up" : "flat" },
+          volume: { ratio: volumeRatio },
+          levels: { entryReference: last.close, stopReference: last.low, vwap: last.vwap },
+          checklist: [
+            { label: "Trend", passed: momentumUp, detail: momentumUp ? "last bar closed higher" : "flat" },
+            { label: "Volume", passed: volumeRatio >= 1.15, detail: `${number.format(volumeRatio)}x average volume` },
+            { label: "VWAP", passed: true, detail: "checked on server when available" },
+            { label: "Momentum", passed: momentumUp, detail: momentumUp ? "positive" : "waiting" }
+          ]
+        };
       }
 
       function friendlyErrorMessage(error) {

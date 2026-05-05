@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { defaultRiskSettings, defaultStrategySettings } from "../src/config.js";
+import { analyzeScalpingSignal } from "../src/core/scalping.js";
 import { evaluateRisk } from "../src/core/risk.js";
 import { evaluateLatestSignal, runStrategy } from "../src/core/strategy.js";
 import { OpenAIAnalysisClient } from "../src/llm/openai.js";
@@ -307,6 +308,18 @@ test("Yahoo volume screener detects abnormal volume", async () => {
   assert.equal(result.scanned, 1);
   assert.equal(result.matches[0].symbol, "AMD");
   assert.equal(Number(result.matches[0].volumeRatio.toFixed(2)), 3.5);
+});
+
+test("Scalping Pro flags aligned volume and trend as BUY watch", () => {
+  const bars = Array.from({ length: 24 }, (_, index) => {
+    const close = 100 + index * 0.25;
+    return bar(`2026-05-01T14:${String(index).padStart(2, "0")}:00Z`, close - 0.1, close + 0.2, close - 0.3, close, index === 23 ? 4200 : 1400);
+  });
+  const result = analyzeScalpingSignal(bars, baseSettings);
+  assert.equal(result.signal, "BUY_WATCH");
+  assert.equal(result.bias, "long");
+  assert.ok(result.confidence >= 80);
+  assert.equal(result.volume.spike, true);
 });
 
 function bar(t, open, high, low, close, volume) {

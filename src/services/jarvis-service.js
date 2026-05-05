@@ -1,4 +1,5 @@
 import { defaultRiskSettings, readConfig } from "../config.js";
+import { analyzeScalpingSignal } from "../core/scalping.js";
 import { evaluateLatestSignal } from "../core/strategy.js";
 import { evaluateRisk } from "../core/risk.js";
 import { AlpacaClient } from "../broker/alpaca.js";
@@ -64,7 +65,8 @@ export class JarvisService {
     await this.saveMarketSnapshot(snapshot);
     return {
       ...snapshot,
-      signal: { ...signal, symbol: snapshot.symbol }
+      signal: { ...signal, symbol: snapshot.symbol },
+      scalping: analyzeScalpingSignal(snapshot.bars, this.config.strategy)
     };
   }
 

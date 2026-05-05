@@ -162,9 +162,10 @@ function securityHeaders(headers = {}) {
       "default-src 'self'",
       "base-uri 'none'",
       "frame-ancestors 'self' https://chatgpt.com https://chat.openai.com https://platform.openai.com",
-      "img-src 'self' data:",
+      "frame-src https://www.tradingview.com https://s.tradingview.com https://www.tradingview-widget.com",
+      "img-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
       `connect-src 'self' ${config.appPublicUrl} ${config.mcpPublicUrl}`
     ].join("; "),
     ...headers
