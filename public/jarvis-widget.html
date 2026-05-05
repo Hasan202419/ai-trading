@@ -1113,7 +1113,12 @@
       }
 
       function renderMarketSnapshot(data) {
-        el.dataBadge.textContent = data.provider === "none" ? "Data unavailable" : `${data.providerName} data`;
+        const providerLabel = data.providerName || data.provider || "Market";
+        el.dataBadge.textContent = data.provider === "none"
+          ? "Data unavailable"
+          : /data/i.test(providerLabel)
+            ? providerLabel
+            : `${providerLabel} data`;
         el.dataBadge.className = data.provider === "none" ? "badge warn" : "badge ok";
         const lastBar = data.bars?.[data.bars.length - 1] || {};
         const quote = data.quote || {};
