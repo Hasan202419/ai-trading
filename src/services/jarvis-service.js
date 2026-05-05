@@ -74,13 +74,15 @@ export class JarvisService {
     symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"],
     lookbackDays = 20,
     volumeMultiplier = 2,
-    provider = "auto"
+    provider = "auto",
+    timeframe = "1d"
   } = {}) {
     const result = await this.marketData.screenVolumeSpikes({
       symbols: parseSymbols(symbols),
       lookbackDays,
       volumeMultiplier,
-      provider
+      provider,
+      timeframe
     });
     await this.audit("stock_screener_run", {
       provider: result.provider,
@@ -93,7 +95,7 @@ export class JarvisService {
     });
     return {
       ...result,
-      mode: "research_only",
+      mode: String(timeframe) === "1d" ? "research_only" : "intraday_research",
       note: "Volume spike screener is read-only research. It does not place orders."
     };
   }

@@ -97,49 +97,57 @@ export class MarketDataRouter {
     symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA"],
     lookbackDays = 20,
     volumeMultiplier = 2,
-    provider = "auto"
+    provider = "auto",
+    timeframe = "1d",
+    concurrency = 8
   } = {}) {
     const client = this.screenerClient(provider);
     const uniqueSymbols = [...new Set(symbols.map(normalizeSymbol).filter(Boolean))].slice(0, 100);
-    const results = [];
     const errors = [];
+    const normalizedTimeframe = String(timeframe || "1d");
+    const requestedLimit = Math.max(Number(lookbackDays) || 20, 2);
 
-    for (const symbol of uniqueSymbols) {
+    const rows = await mapLimit(uniqueSymbols, Math.max(1, Math.min(Number(concurrency) || 8, 12)), async (symbol) => {
       try {
         const bars = await client.getBars({
           symbol,
-          timeframe: "1d",
-          limit: Math.max(Number(lookbackDays) || 20, 2)
+          timeframe: normalizedTimeframe,
+          limit: requestedLimit
         });
         const volumes = bars.map((bar) => Number(bar.volume)).filter(Number.isFinite);
         if (volumes.length < 2) {
           errors.push({ symbol, provider: client.id, reason: "not_enough_daily_bars" });
-          continue;
+          return null;
         }
         const currentVolume = volumes[volumes.length - 1];
         const averageVolume = average(volumes.slice(0, -1));
         const volumeRatio = averageVolume ? currentVolume / averageVolume : 0;
         const lastBar = bars[bars.length - 1];
-        results.push({
+        return {
           symbol,
           provider: client.id,
           providerName: client.name,
           dataDelayMinutes: client.dataDelayMinutes,
+          timeframe: normalizedTimeframe,
           currentVolume,
           averageVolume,
           volumeRatio,
           isSpike: volumeRatio >= Number(volumeMultiplier),
           close: lastBar.close,
           timestamp: lastBar.t
-        });
+        };
       } catch (error) {
         errors.push({ symbol, provider: client.id, reason: error.message });
+        return null;
       }
-    }
+    });
+
+    const results = rows.filter(Boolean);
 
     return {
       provider: client.id,
       providerName: client.name,
+      timeframe: normalizedTimeframe,
       lookbackDays: Number(lookbackDays),
       volumeMultiplier: Number(volumeMultiplier),
       scanned: uniqueSymbols.length,
@@ -557,6 +565,20 @@ function average(values) {
   const finite = values.filter(Number.isFinite);
   if (!finite.length) return 0;
   return finite.reduce((sum, value) => sum + value, 0) / finite.length;
+}
+
+async function mapLimit(items, limit, iteratee) {
+  const results = new Array(items.length);
+  let index = 0;
+  async function worker() {
+    while (index < items.length) {
+      const current = index;
+      index += 1;
+      results[current] = await iteratee(items[current], current);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return results;
 }
 
 function timestampFromMillis(value) {

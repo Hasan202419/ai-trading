@@ -30,7 +30,8 @@ const routes = {
       symbols: params.get("symbols") || undefined,
       lookbackDays: params.get("lookbackDays") || undefined,
       volumeMultiplier: params.get("volumeMultiplier") || undefined,
-      provider: params.get("provider") || undefined
+      provider: params.get("provider") || undefined,
+      timeframe: params.get("timeframe") || undefined
     });
   },
   "GET /api/trade-journal": async () => service.getTradeJournal(20),

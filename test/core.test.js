@@ -310,6 +310,35 @@ test("Yahoo volume screener detects abnormal volume", async () => {
   assert.equal(Number(result.matches[0].volumeRatio.toFixed(2)), 3.5);
 });
 
+test("volume screener can scan intraday bars with bounded concurrency", async () => {
+  const requested = [];
+  const router = new MarketDataRouter(
+    {
+      providerPriority: ["yahoo"],
+      yahoo: { enabled: true, baseUrl: "https://query1.finance.test", dataDelayMinutes: 15 },
+      massive: {},
+      finnhub: {},
+      finviz: {}
+    },
+    async (url) => {
+      requested.push(url);
+      return jsonResponse(yahooChartResponse([100, 100, 260], [10, 10.5, 11]));
+    }
+  );
+  const result = await router.screenVolumeSpikes({
+    symbols: ["spy", "qqq", "spy"],
+    timeframe: "1",
+    lookbackDays: 3,
+    volumeMultiplier: 2,
+    concurrency: 2
+  });
+  assert.equal(result.timeframe, "1");
+  assert.equal(result.scanned, 2);
+  assert.equal(result.matches.length, 2);
+  assert.equal(requested.length, 2);
+  assert.ok(requested[0].includes("interval=1m"));
+});
+
 test("Scalping Pro flags aligned volume and trend as BUY watch", () => {
   const bars = Array.from({ length: 24 }, (_, index) => {
     const close = 100 + index * 0.25;

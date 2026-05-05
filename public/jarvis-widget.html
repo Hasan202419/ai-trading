@@ -946,8 +946,8 @@
 
         <article class="panel wide">
           <div class="panel-head">
-            <h2>Stock Screener</h2>
-            <span class="hint">daily volume spike scan</span>
+            <h2>Live Stock Screener</h2>
+            <span class="hint">intraday delayed volume spike scan</span>
           </div>
           <div class="table-wrap" id="screenerTable">
             <div class="empty">Screener is loading automatically.</div>
@@ -1031,6 +1031,12 @@
       const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
       const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
       const integer = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+      const screenSymbols = [
+        "SPY", "QQQ", "IWM", "DIA", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META",
+        "AMZN", "GOOGL", "GOOG", "AVGO", "SMCI", "MARA", "PLTR", "COIN", "NFLX", "CRM",
+        "TSM", "INTC", "MU", "ARM", "ORCL", "ADBE", "NOW", "UBER", "SHOP", "SNOW",
+        "JPM", "BAC", "GS", "XOM", "CVX", "LLY", "UNH", "COST", "WMT", "DIS"
+      ];
 
       const el = {
         modeBadge: document.getElementById("modeBadge"),
@@ -1147,11 +1153,11 @@
 
       async function runVolumeScreener(options = {}) {
         if (!options.auto) el.runScreener.disabled = true;
-        el.screenerTable.innerHTML = '<div class="empty">Scanning SPY, QQQ, AAPL, MSFT, NVDA, TSLA, AMD, META, AMZN, GOOGL.</div>';
+        el.screenerTable.innerHTML = `<div class="empty">Scanning ${screenSymbols.length} liquid US stocks on 1-minute bars. Provider delay depends on your data plan.</div>`;
         try {
-          const symbols = encodeURIComponent("SPY,QQQ,AAPL,MSFT,NVDA,TSLA,AMD,META,AMZN,GOOGL");
+          const symbols = encodeURIComponent(screenSymbols.join(","));
           const provider = encodeURIComponent(el.providerSelect.value || "auto");
-          const data = await getJson(`/api/screener/volume-spikes?symbols=${symbols}&lookbackDays=20&volumeMultiplier=2&provider=${provider}`);
+          const data = await getJson(`/api/screener/volume-spikes?symbols=${symbols}&timeframe=1&lookbackDays=80&volumeMultiplier=2&provider=${provider}`);
           renderScreener(data);
         } catch (error) {
           const message = friendlyErrorMessage(error);
@@ -1332,7 +1338,8 @@
         const leader = (data.results || [])[0];
         el.screenerReport.innerHTML = reportCards([
           ["Provider", data.providerName || data.provider || "-", data.provider === "none" ? "warn" : "ok"],
-          ["Mode", data.mode === "research_only" ? "Research only" : "Read only", "ok"],
+          ["Mode", data.mode === "intraday_research" ? "Intraday scan" : data.mode === "research_only" ? "Research only" : "Read only", "ok"],
+          ["Timeframe", data.timeframe === "1" ? "1 minute" : data.timeframe || "1d", "ok"],
           ["Scanned", String(data.scanned || 0), "ok"],
           ["Spikes", spikes ? `${spikes} abnormal` : "No abnormal spike", spikes ? "warn" : "ok"],
           ["Top volume", leader ? `${leader.symbol} ${number.format(toNumber(leader.volumeRatio))}x` : "-", "ok"],
