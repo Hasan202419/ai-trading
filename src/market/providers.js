@@ -6,6 +6,7 @@ export class MarketDataRouter {
     this.config = config;
     this.fetch = fetchImpl;
     this.providers = {
+      alpaca: new AlpacaMarketDataClient(config.alpaca, fetchImpl),
       yahoo: new YahooFinanceClient(config.yahoo, fetchImpl),
       massive: new MassiveClient(config.massive, fetchImpl),
       finnhub: new FinnhubClient(config.finnhub, fetchImpl),
@@ -15,6 +16,7 @@ export class MarketDataRouter {
 
   status() {
     return [
+      this.providers.alpaca.status(),
       this.providers.yahoo.status(),
       this.providers.massive.status(),
       this.providers.finnhub.status(),
@@ -86,7 +88,7 @@ export class MarketDataRouter {
     if (provider && provider !== "auto") {
       return [this.providers[provider]].filter(Boolean);
     }
-    return (this.config.providerPriority || ["massive", "finnhub"])
+    return (this.config.providerPriority || ["alpaca", "yahoo", "massive", "finnhub"])
       .map((id) => this.providers[id])
       .filter(Boolean);
   }
@@ -146,6 +148,86 @@ export class MarketDataRouter {
       errors,
       fetchedAt: new Date().toISOString()
     };
+  }
+}
+
+export class AlpacaMarketDataClient {
+  constructor(config = {}, fetchImpl = globalThis.fetch) {
+    this.id = "alpaca";
+    this.name = "Alpaca Market Data";
+    this.config = config;
+    this.fetch = fetchImpl;
+    this.supportsBars = true;
+    this.dataDelayMinutes = Number(config.dataDelayMinutes || 15);
+  }
+
+  isConfigured() {
+    return Boolean(this.config.keyId && this.config.secretKey);
+  }
+
+  status() {
+    return providerStatus(this, {
+      note: "Read-only US stock snapshots and OHLCV bars. Feed and delay depend on your Alpaca market-data subscription."
+    });
+  }
+
+  async getQuote({ symbol }) {
+    const data = await this.request(`/v2/stocks/${encodeURIComponent(symbol)}/snapshot?feed=${encodeURIComponent(this.config.feed || "iex")}`);
+    const latestTrade = data.latestTrade || {};
+    const dailyBar = data.dailyBar || {};
+    const previousDailyBar = data.prevDailyBar || {};
+    const price = numberOrNull(latestTrade.p ?? dailyBar.c);
+    const previousClose = numberOrNull(previousDailyBar.c);
+    const change = previousClose !== null && price !== null ? numberOrNull(price - previousClose) : null;
+    return {
+      symbol,
+      price,
+      previousClose,
+      open: numberOrNull(dailyBar.o),
+      high: numberOrNull(dailyBar.h),
+      low: numberOrNull(dailyBar.l),
+      volume: numberOrNull(dailyBar.v),
+      change,
+      changePercent: previousClose ? numberOrNull((change / previousClose) * 100) : null,
+      timestamp: latestTrade.t || dailyBar.t || null
+    };
+  }
+
+  async getBars({ symbol, timeframe = DEFAULT_TIMEFRAME, limit = DEFAULT_LIMIT }) {
+    const requestedLimit = Math.min(Math.max(Number(limit) || DEFAULT_LIMIT, 2), 10000);
+    const timeframeName = alpacaTimeframe(timeframe);
+    const path =
+      `/v2/stocks/bars?symbols=${encodeURIComponent(symbol)}` +
+      `&timeframe=${encodeURIComponent(timeframeName)}` +
+      `&limit=${requestedLimit}` +
+      `&adjustment=raw&feed=${encodeURIComponent(this.config.feed || "iex")}`;
+    const data = await this.request(path);
+    const rows = data.bars?.[symbol] || data.bars?.[symbol.toUpperCase()] || [];
+    return rows.map((bar) => ({
+      t: bar.t,
+      open: numberOrNull(bar.o),
+      high: numberOrNull(bar.h),
+      low: numberOrNull(bar.l),
+      close: numberOrNull(bar.c),
+      volume: numberOrNull(bar.v || 0),
+      vwap: numberOrNull(bar.vw),
+      transactions: numberOrNull(bar.n)
+    })).filter((bar) => [bar.open, bar.high, bar.low, bar.close].every(Number.isFinite));
+  }
+
+  async request(path) {
+    if (!this.isConfigured()) throw new Error("Alpaca market-data keys are not configured.");
+    const response = await this.fetch(`${trimSlash(this.config.baseUrl)}${path}`, {
+      headers: {
+        "APCA-API-KEY-ID": this.config.keyId,
+        "APCA-API-SECRET-KEY": this.config.secretKey
+      }
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Alpaca market data request failed ${response.status}: ${text}`);
+    }
+    return response.json();
   }
 }
 
@@ -401,6 +483,12 @@ function normalizeTimeframe(timeframe) {
   if (String(timeframe).toLowerCase() === "1d" || String(timeframe).toUpperCase() === "D") return 1440;
   const minutes = Number.parseInt(String(timeframe).replace(/[^0-9]/g, ""), 10);
   return [1, 2, 3, 5, 15, 30, 60].includes(minutes) ? minutes : 1;
+}
+
+function alpacaTimeframe(timeframe) {
+  const value = String(timeframe).toLowerCase();
+  if (value === "1d" || value === "d" || value === "1440") return "1Day";
+  return `${normalizeTimeframe(timeframe)}Min`;
 }
 
 function yahooInterval(timeframe) {

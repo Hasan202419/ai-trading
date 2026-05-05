@@ -35,7 +35,7 @@ npm run mcp
 - `src/core/strategy.js` implements VWAP cross-up, session window, TP/SL, time exit, ATR, volume, trend, and no-trade filters.
 - `src/core/risk.js` implements 0.5% per-trade risk, 2% daily max loss, 3 consecutive-loss kill switch, and paper-only enforcement.
 - `src/broker/alpaca.js` is the paper broker adapter.
-- `src/market/providers.js` is the read-only Yahoo/Finnhub/Massive market-data adapter. Finviz is research-only until a licensed OHLCV endpoint is provided.
+- `src/market/providers.js` is the read-only Alpaca/Yahoo/Finnhub/Massive market-data adapter. Finviz is research-only until a licensed OHLCV endpoint is provided.
 - `src/db/supabase.js` is the service-role backend adapter.
 - `src/llm/openai.js` is the advisory-only OpenAI Responses API adapter.
 - `src/mcp/server.js` exposes ChatGPT Apps tools and the widget resource.
@@ -56,7 +56,9 @@ JARVIS can fetch read-only market snapshots without changing the order flow. Add
 
 ```bash
 MARKET_DATA_PROVIDER=auto
-MARKET_DATA_PROVIDER_PRIORITY=yahoo,massive,finnhub
+MARKET_DATA_PROVIDER_PRIORITY=alpaca,yahoo,massive,finnhub
+ALPACA_DATA_FEED=iex
+ALPACA_DATA_DELAY_MINUTES=15
 YAHOO_FINANCE_ENABLED=true
 MASSIVE_API_KEY=
 FINNHUB_API_KEY=
@@ -68,7 +70,7 @@ Sync local `.env` market-data keys to all Render services without printing secre
 .\scripts\sync-render-market-env.ps1 -Redeploy
 ```
 
-Execution stays paper-only. Market data is used for analysis, deterministic VWAP signal evaluation, and research screeners; ChatGPT still cannot place orders by itself. Finviz is intentionally not used for execution signals unless you provide a documented, licensed OHLCV API endpoint.
+Execution stays paper-only. Market data is used for analysis, deterministic VWAP signal evaluation, and research screeners; ChatGPT still cannot place orders by itself. Alpaca is the preferred stock-data feed when keys are configured. Yahoo is a keyless research fallback. Massive/Finnhub can be added as server-only paid feeds. Binance is crypto/futures-oriented, so it should live in a later crypto module rather than the US-stock screener. Hugging Face is useful later for ML/news/sentiment models, not as a raw stock OHLCV provider.
 
 Run the built-in Yahoo/Finviz-style volume spike screener:
 

@@ -17,7 +17,9 @@ export function readConfig(env = process.env) {
       keyId: loadedEnv.ALPACA_API_KEY_ID || "",
       secretKey: loadedEnv.ALPACA_API_SECRET_KEY || "",
       baseUrl: loadedEnv.ALPACA_BASE_URL || "https://paper-api.alpaca.markets",
-      dataBaseUrl: loadedEnv.ALPACA_DATA_BASE_URL || "https://data.alpaca.markets"
+      dataBaseUrl: loadedEnv.ALPACA_DATA_BASE_URL || "https://data.alpaca.markets",
+      dataFeed: loadedEnv.ALPACA_DATA_FEED || "iex",
+      dataDelayMinutes: Number(loadedEnv.ALPACA_DATA_DELAY_MINUTES || 15)
     },
     supabase: {
       url: loadedEnv.SUPABASE_URL || "",
@@ -31,16 +33,20 @@ export function readConfig(env = process.env) {
     },
     marketData: {
       provider: loadedEnv.MARKET_DATA_PROVIDER || "auto",
-      providerPriority: (loadedEnv.MARKET_DATA_PROVIDER_PRIORITY || "yahoo,massive,finnhub")
-        .split(",")
-        .map((provider) => provider.trim())
-        .filter(Boolean),
+      providerPriority: normalizeProviderPriority(loadedEnv.MARKET_DATA_PROVIDER_PRIORITY || "alpaca,yahoo,massive,finnhub"),
       defaultSymbol: loadedEnv.MARKET_DATA_DEFAULT_SYMBOL || "SPY",
       defaultTimeframe: loadedEnv.MARKET_DATA_DEFAULT_TIMEFRAME || "1",
       yahoo: {
         enabled: (loadedEnv.YAHOO_FINANCE_ENABLED || "true") === "true",
         baseUrl: loadedEnv.YAHOO_FINANCE_BASE_URL || "https://query1.finance.yahoo.com",
         dataDelayMinutes: Number(loadedEnv.YAHOO_FINANCE_DATA_DELAY_MINUTES || 15)
+      },
+      alpaca: {
+        keyId: loadedEnv.ALPACA_API_KEY_ID || "",
+        secretKey: loadedEnv.ALPACA_API_SECRET_KEY || "",
+        baseUrl: loadedEnv.ALPACA_DATA_BASE_URL || "https://data.alpaca.markets",
+        feed: loadedEnv.ALPACA_DATA_FEED || "iex",
+        dataDelayMinutes: Number(loadedEnv.ALPACA_DATA_DELAY_MINUTES || 15)
       },
       massive: {
         apiKey: loadedEnv.MASSIVE_API_KEY || loadedEnv.Massive_API_KEY || loadedEnv.MASSIVE_API || loadedEnv.Massive_API || "",
@@ -60,6 +66,14 @@ export function readConfig(env = process.env) {
     },
     strategy: defaultStrategySettings()
   };
+}
+
+function normalizeProviderPriority(value) {
+  const providers = String(value || "")
+    .split(",")
+    .map((provider) => provider.trim())
+    .filter(Boolean);
+  return ["alpaca", ...providers.filter((provider) => provider !== "alpaca")];
 }
 
 export function loadDotEnv(path = ".env") {

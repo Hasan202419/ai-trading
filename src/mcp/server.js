@@ -113,7 +113,7 @@ function createMcpServer() {
       inputSchema: {
         symbol: z.string().default("SPY"),
         timeframe: z.string().default("1"),
-        provider: z.enum(["auto", "yahoo", "massive", "finnhub"]).default("auto"),
+        provider: z.enum(["auto", "alpaca", "yahoo", "massive", "finnhub"]).default("auto"),
         bars: z.array(z.record(z.any())).default([])
       },
       annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
@@ -143,7 +143,7 @@ function createMcpServer() {
         symbol: z.string().default("SPY"),
         timeframe: z.string().default("1"),
         limit: z.number().int().min(2).max(500).default(80),
-        provider: z.enum(["auto", "yahoo", "massive", "finnhub"]).default("auto")
+        provider: z.enum(["auto", "alpaca", "yahoo", "massive", "finnhub"]).default("auto")
       },
       annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
@@ -155,12 +155,12 @@ function createMcpServer() {
     "screen_volume_spikes",
     {
       title: "Screen Volume Spikes",
-      description: "Run a read-only Yahoo/Finviz-style stock screener for abnormal daily volume. It never places orders.",
+      description: "Run a read-only stock screener for abnormal daily volume. It never places orders.",
       inputSchema: {
         symbols: z.array(z.string()).default(["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"]),
         lookbackDays: z.number().int().min(5).max(120).default(20),
         volumeMultiplier: z.number().min(1).max(20).default(2),
-        provider: z.enum(["yahoo"]).default("yahoo")
+        provider: z.enum(["alpaca", "yahoo", "massive", "finnhub"]).default("yahoo")
       },
       annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }

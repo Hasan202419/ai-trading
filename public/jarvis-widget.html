@@ -687,7 +687,7 @@
           <p class="eyebrow">JARVIS Algo Trader</p>
           <h1>Paper Trading Control Desk</h1>
           <p class="subtitle">
-            VWAP signal engine, Alpaca paper account, Yahoo research data, strict risk manager, and ChatGPT advisory tools in one control panel.
+            VWAP signal engine, Alpaca stock data, Yahoo research fallback, strict risk manager, and ChatGPT advisory tools in one control panel.
           </p>
           <div class="status-row">
             <span class="badge ok" id="modeBadge">Paper mode</span>
@@ -725,6 +725,7 @@
           <input id="symbolInput" value="SPY" aria-label="Symbol" maxlength="12" />
           <select id="providerSelect" aria-label="Market data provider">
             <option value="auto">Auto</option>
+            <option value="alpaca">Alpaca Stock Data</option>
             <option value="yahoo">Yahoo Finance</option>
             <option value="massive">Massive</option>
             <option value="finnhub">Finnhub</option>
@@ -783,7 +784,7 @@
         <article class="panel wide">
           <div class="panel-head">
             <h2>Stock Screener</h2>
-            <span class="hint">Yahoo daily volume spike scan</span>
+            <span class="hint">daily volume spike scan</span>
           </div>
           <div class="table-wrap" id="screenerTable">
             <div class="empty">Screener is loading automatically.</div>
@@ -977,7 +978,8 @@
         el.screenerTable.innerHTML = '<div class="empty">Scanning SPY, QQQ, AAPL, MSFT, NVDA, TSLA, AMD, META, AMZN, GOOGL.</div>';
         try {
           const symbols = encodeURIComponent("SPY,QQQ,AAPL,MSFT,NVDA,TSLA,AMD,META,AMZN,GOOGL");
-          const data = await getJson(`/api/screener/volume-spikes?symbols=${symbols}&lookbackDays=20&volumeMultiplier=2&provider=yahoo`);
+          const provider = encodeURIComponent(el.providerSelect.value || "auto");
+          const data = await getJson(`/api/screener/volume-spikes?symbols=${symbols}&lookbackDays=20&volumeMultiplier=2&provider=${provider}`);
           renderScreener(data);
         } catch (error) {
           el.screenerTable.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;

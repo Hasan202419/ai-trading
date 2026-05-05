@@ -153,6 +153,54 @@ test("market data router maps Massive aggregate bars", async () => {
   assert.equal(snapshot.quote.price, 101.2);
 });
 
+test("market data router maps Alpaca stock snapshots and bars", async () => {
+  const router = new MarketDataRouter(
+    {
+      providerPriority: ["alpaca"],
+      alpaca: {
+        keyId: "alpaca-key",
+        secretKey: "alpaca-secret",
+        baseUrl: "https://data.alpaca.test",
+        feed: "iex",
+        dataDelayMinutes: 15
+      },
+      yahoo: { enabled: false },
+      massive: {},
+      finnhub: {},
+      finviz: {}
+    },
+    async (url, options) => {
+      assert.equal(options.headers["APCA-API-KEY-ID"], "alpaca-key");
+      assert.equal(options.headers["APCA-API-SECRET-KEY"], "alpaca-secret");
+      if (url.includes("/v2/stocks/SPY/snapshot")) {
+        return jsonResponse({
+          latestTrade: { p: 101.2, t: "2026-05-04T20:00:00Z" },
+          dailyBar: { o: 99, h: 102, l: 98, c: 101.2, v: 12345, t: "2026-05-04T04:00:00Z" },
+          prevDailyBar: { c: 100 }
+        });
+      }
+      assert.ok(url.includes("/v2/stocks/bars?symbols=SPY"));
+      assert.ok(url.includes("timeframe=1Min"));
+      assert.ok(url.includes("feed=iex"));
+      return jsonResponse({
+        bars: {
+          SPY: [
+            { t: "2026-05-04T19:59:00Z", o: 100, h: 101, l: 99, c: 100.5, v: 1000, vw: 100.2, n: 12 },
+            { t: "2026-05-04T20:00:00Z", o: 100.5, h: 102, l: 100, c: 101.8, v: 2500, vw: 101.2, n: 18 }
+          ]
+        }
+      });
+    }
+  );
+  const snapshot = await router.getSnapshot({ symbol: "spy", provider: "auto", timeframe: "1", limit: 2 });
+  assert.equal(snapshot.provider, "alpaca");
+  assert.equal(snapshot.providerName, "Alpaca Market Data");
+  assert.equal(snapshot.bars.length, 2);
+  assert.equal(snapshot.bars[1].transactions, 18);
+  assert.equal(snapshot.quote.price, 101.2);
+  assert.equal(snapshot.quote.volume, 12345);
+});
+
 test("market data router maps Finnhub candles when Massive is unavailable", async () => {
   const router = new MarketDataRouter(
     {

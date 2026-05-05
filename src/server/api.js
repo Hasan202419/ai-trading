@@ -1,6 +1,6 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import { readConfig } from "../config.js";
 import { evaluateLatestSignal } from "../core/strategy.js";
 import { evaluateRisk } from "../core/risk.js";
@@ -8,6 +8,8 @@ import { JarvisService } from "../services/jarvis-service.js";
 
 const config = readConfig();
 const service = new JarvisService(config);
+const publicRoot = resolve(process.cwd(), "public");
+const maxJsonBodyBytes = 1024 * 1024;
 
 const routes = {
   "GET /health": async () => ({ ok: true, service: "jarvis-api", mode: config.tradingMode }),
@@ -88,13 +90,18 @@ server.listen(config.port, () => {
 async function readJson(req) {
   if (req.method === "GET") return {};
   const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
+  let totalBytes = 0;
+  for await (const chunk of req) {
+    totalBytes += chunk.length;
+    if (totalBytes > maxJsonBodyBytes) throw new Error("request_body_too_large");
+    chunks.push(chunk);
+  }
   const raw = Buffer.concat(chunks).toString("utf8");
   return raw ? JSON.parse(raw) : {};
 }
 
 function json(res, status, value) {
-  res.writeHead(status, { "Content-Type": "application/json" });
+  res.writeHead(status, securityHeaders({ "Content-Type": "application/json; charset=utf-8" }));
   res.end(JSON.stringify(value));
 }
 
@@ -104,18 +111,62 @@ async function servePublic(req, res) {
 }
 
 async function servePublicFile(pathname, res) {
-  const file = join(process.cwd(), "public", pathname);
-  const content = await readFile(file);
-  const mime = extname(file) === ".html" ? "text/html" : "text/plain";
-  res.writeHead(200, { "Content-Type": mime });
-  res.end(content);
+  const file = resolve(publicRoot, String(pathname || "").replace(/^\/+/, ""));
+  if (!isInsidePublicRoot(file)) {
+    json(res, 403, { error: "forbidden" });
+    return;
+  }
+  try {
+    const content = await readFile(file);
+    res.writeHead(200, securityHeaders({ "Content-Type": mimeFor(file) }));
+    res.end(content);
+  } catch {
+    json(res, 404, { error: "not_found" });
+  }
 }
 
 async function serveSubmissionJson(res) {
   const content = await readFile(join(process.cwd(), "chatgpt-app-submission.json"));
-  res.writeHead(200, {
-    "Content-Type": "application/json",
+  res.writeHead(200, securityHeaders({
+    "Content-Type": "application/json; charset=utf-8",
     "Content-Disposition": "attachment; filename=\"chatgpt-app-submission.json\""
-  });
+  }));
   res.end(content);
+}
+
+function isInsidePublicRoot(file) {
+  return file === publicRoot || file.startsWith(`${publicRoot}${sep}`);
+}
+
+function mimeFor(file) {
+  const extension = extname(file).toLowerCase();
+  const types = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".svg": "image/svg+xml; charset=utf-8"
+  };
+  return types[extension] || "application/octet-stream";
+}
+
+function securityHeaders(headers = {}) {
+  return {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Content-Security-Policy": [
+      "default-src 'self'",
+      "base-uri 'none'",
+      "frame-ancestors 'self' https://chatgpt.com https://chat.openai.com https://platform.openai.com",
+      "img-src 'self' data:",
+      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline'",
+      `connect-src 'self' ${config.appPublicUrl} ${config.mcpPublicUrl}`
+    ].join("; "),
+    ...headers
+  };
 }
