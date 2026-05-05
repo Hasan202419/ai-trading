@@ -43,12 +43,12 @@ export function readConfig(env = process.env) {
         dataDelayMinutes: Number(loadedEnv.YAHOO_FINANCE_DATA_DELAY_MINUTES || 15)
       },
       massive: {
-        apiKey: loadedEnv.MASSIVE_API_KEY || "",
+        apiKey: loadedEnv.MASSIVE_API_KEY || loadedEnv.Massive_API_KEY || loadedEnv.MASSIVE_API || loadedEnv.Massive_API || "",
         baseUrl: loadedEnv.MASSIVE_BASE_URL || "https://api.massive.com",
         dataDelayMinutes: Number(loadedEnv.MASSIVE_DATA_DELAY_MINUTES || 15)
       },
       finnhub: {
-        apiKey: loadedEnv.FINNHUB_API_KEY || "",
+        apiKey: loadedEnv.FINNHUB_API_KEY || loadedEnv.Finnhub_API_KEY || loadedEnv.FINNHUB_API || loadedEnv.Finnhub_API || "",
         baseUrl: loadedEnv.FINNHUB_BASE_URL || "https://finnhub.io/api/v1",
         dataDelayMinutes: Number(loadedEnv.FINNHUB_DATA_DELAY_MINUTES || 0)
       },
