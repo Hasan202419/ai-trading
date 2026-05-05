@@ -25,11 +25,22 @@ Upload this file when the platform asks for the Codex-generated submission file:
 chatgpt-app-submission.json
 ```
 
+## Screenshots
+
+Upload the generated dashboard screenshots on the Screenshots step:
+
+```text
+submission-assets/jarvis-dashboard-desktop.png
+submission-assets/jarvis-dashboard-mobile.png
+```
+
+They are PNG files, both wider than 706px and 860px tall.
+
 ## Testing Notes
 
 - The app is paper-trading only.
 - ChatGPT does not place live orders.
-- Tools can fetch portfolio state, market providers, Yahoo snapshots, volume screener results, strategy suggestions, paper-trade risk approval, and trade journal rows.
+- Tools can fetch portfolio state, market providers, Alpaca/Yahoo snapshots, volume screener results, strategy suggestions, paper-trade risk approval, and trade journal rows.
 - Use the positive and negative tests inside `chatgpt-app-submission.json` for the Testing step.
 
 ## Manual Checks Before Submit
