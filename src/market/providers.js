@@ -582,8 +582,13 @@ async function mapLimit(items, limit, iteratee) {
 }
 
 function timestampFromMillis(value) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? new Date(number).toISOString() : null;
+  let number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return null;
+  if (number > 1e17) number = Math.floor(number / 1e6);
+  else if (number > 1e14) number = Math.floor(number / 1e3);
+  else if (number < 1e11) number *= 1000;
+  const date = new Date(number);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function trimSlash(value = "") {

@@ -131,7 +131,7 @@ test("market data router maps Massive aggregate bars", async () => {
       if (url.includes("/v2/snapshot/")) {
         return jsonResponse({
           ticker: {
-            lastTrade: { p: 101.2, t: 1770000000000 },
+            lastTrade: { p: 101.2, t: 1770000000000000000 },
             prevDay: { c: 100 },
             day: { o: 99, h: 102, l: 98, v: 12345 }
           }
@@ -152,6 +152,7 @@ test("market data router maps Massive aggregate bars", async () => {
   assert.equal(snapshot.bars.length, 2);
   assert.equal(snapshot.bars[1].close, 101.8);
   assert.equal(snapshot.quote.price, 101.2);
+  assert.equal(snapshot.quote.timestamp, new Date(1770000000000).toISOString());
 });
 
 test("market data router maps Alpaca stock snapshots and bars", async () => {
