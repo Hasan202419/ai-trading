@@ -316,7 +316,9 @@
 
       .market-topline,
       .rule-grid,
-      .service-grid {
+      .service-grid,
+      .report-grid,
+      .journal-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
@@ -325,7 +327,8 @@
 
       .stat-cell,
       .rule-card,
-      .service-card {
+      .service-card,
+      .report-card {
         display: grid;
         gap: 5px;
         min-height: 62px;
@@ -337,10 +340,33 @@
 
       .stat-cell strong,
       .rule-card strong,
-      .service-card strong {
+      .service-card strong,
+      .report-card strong {
         color: #f5f9fb;
         font-size: 16px;
         overflow-wrap: anywhere;
+      }
+
+      .service-card {
+        color: inherit;
+        text-decoration: none;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+
+      .service-card[href] {
+        cursor: pointer;
+      }
+
+      .service-card[href]:hover {
+        border-color: rgba(34, 196, 158, 0.48);
+        background: rgba(18, 87, 73, 0.2);
+      }
+
+      .card-action {
+        color: #6ee7c7;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
       }
 
       .price-chart {
@@ -524,6 +550,21 @@
         line-height: 1.45;
       }
 
+      .explain {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid rgba(126, 155, 170, 0.18);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.5);
+        color: #aabac3;
+        line-height: 1.45;
+      }
+
+      .explain strong {
+        color: #f5f9fb;
+      }
+
       .signal-state {
         display: grid;
         gap: 12px;
@@ -594,25 +635,34 @@
         color: #f5f9fb;
       }
 
-      details {
-        margin-top: 12px;
+      .strategy-flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
       }
 
-      summary {
-        color: #7fd9c7;
-        cursor: pointer;
-        font-size: 12px;
+      .flow-step {
+        min-height: 68px;
+        padding: 10px;
+        border: 1px solid rgba(126, 155, 170, 0.18);
+        border-radius: 8px;
+        background: rgba(7, 13, 18, 0.5);
+      }
+
+      .flow-step span {
+        display: block;
+        color: #7d919c;
+        font-size: 11px;
         font-weight: 800;
+        text-transform: uppercase;
       }
 
-      pre {
-        margin: 10px 0 0;
-        max-height: 140px;
-        overflow: auto;
-        white-space: pre-wrap;
+      .flow-step strong {
+        display: block;
+        margin-top: 5px;
+        color: #f5f9fb;
         overflow-wrap: anywhere;
-        color: #aabac3;
-        font-size: 12px;
       }
 
       @media (max-width: 1080px) {
@@ -632,7 +682,9 @@
         .metrics,
         .market-topline,
         .rule-grid,
-        .service-grid {
+        .service-grid,
+        .report-grid,
+        .journal-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
@@ -665,6 +717,9 @@
         .mini-feed,
         .rule-grid,
         .service-grid,
+        .report-grid,
+        .journal-grid,
+        .strategy-flow,
         .two-col,
         .chart-wrap {
           grid-template-columns: 1fr;
@@ -793,10 +848,12 @@
           <div class="table-wrap" id="screenerTable">
             <div class="empty">Screener is loading automatically.</div>
           </div>
-          <details>
-            <summary>Screener raw details</summary>
-            <pre id="screener">No screener run yet.</pre>
-          </details>
+          <div class="report-grid" id="screenerReport">
+            <div class="report-card"><span class="label">Provider</span><strong>Checking</strong></div>
+            <div class="report-card"><span class="label">Mode</span><strong>Research only</strong></div>
+            <div class="report-card"><span class="label">Spikes</span><strong>-</strong></div>
+            <div class="report-card"><span class="label">Errors</span><strong>-</strong></div>
+          </div>
         </article>
 
         <div class="split panel wide">
@@ -832,7 +889,7 @@
             <h2>Risk Gate</h2>
             <span class="hint">readable rules</span>
           </div>
-          <div id="risk" class="rule-grid"></div>
+          <div id="risk"></div>
         </article>
 
         <article class="panel">
@@ -864,7 +921,8 @@
     </main>
 
     <script type="module">
-      const apiBase = location.hostname.includes("onrender.com") ? "" : "https://jarvis-api-5roc.onrender.com";
+      const sameOriginApi = location.hostname.includes("onrender.com") || ["localhost", "127.0.0.1"].includes(location.hostname);
+      const apiBase = sameOriginApi ? "" : "https://jarvis-api-5roc.onrender.com";
       const mcpStatusUrl = "https://jarvis-mcp-pwxy.onrender.com/status";
       const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
       const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
@@ -900,7 +958,7 @@
         loadMarket: document.getElementById("loadMarket"),
         runScreener: document.getElementById("runScreener"),
         screenerTable: document.getElementById("screenerTable"),
-        screener: document.getElementById("screener")
+        screenerReport: document.getElementById("screenerReport")
       };
 
       window.addEventListener(
@@ -990,7 +1048,12 @@
         } catch (error) {
           const message = friendlyErrorMessage(error);
           el.screenerTable.innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
-          el.screener.textContent = message;
+          el.screenerReport.innerHTML = reportCards([
+            ["Provider", "Unavailable", "warn"],
+            ["Mode", "Research only", "ok"],
+            ["Spikes", "-"],
+            ["Errors", "Check key/provider", "warn"]
+          ]);
         } finally {
           el.runScreener.disabled = false;
         }
@@ -1037,8 +1100,9 @@
         el.apiBadge.textContent = health.ok ? "API online" : "API offline";
         el.apiBadge.className = health.ok ? "badge ok" : "badge warn";
         renderSystemCards([
-          ["API", health.ok ? "Online" : "Offline", health.ok ? "ok" : "warn"],
+          ["API", health.ok ? "Online" : "Offline", health.ok ? "ok" : "warn", "/health"],
           ["MCP", "Status page", "ok", mcpStatusUrl],
+          ["App", "Dashboard", "ok", location.origin || "/"],
           ["Mode", health.mode || "paper", "ok"],
           ["Live trading", "Disabled", "warn"]
         ]);
@@ -1083,14 +1147,23 @@
       }
 
       function renderRiskCards(data) {
-        el.risk.innerHTML = [
-          ruleCard("Mode", data.tradingMode || "paper", data.tradingMode === "paper" || !data.tradingMode ? "ok" : "warn"),
-          ruleCard("Manual approval", data.requireManualApproval ? "Required" : "Off", data.requireManualApproval ? "warn" : "ok"),
-          ruleCard("Daily stop", "2% max loss", "warn"),
-          ruleCard("Loss limit", "3 in a row", "warn"),
-          ruleCard("Live trading", "Disabled", "warn"),
-          ruleCard("Account", data.accountBlocked || data.tradingBlocked ? "Blocked" : "Clear", data.accountBlocked || data.tradingBlocked ? "warn" : "ok")
-        ].join("");
+        const accountBlocked = data.accountBlocked || data.tradingBlocked;
+        el.risk.innerHTML = `
+          <div class="rule-grid">
+            ${[
+              ruleCard("Mode", data.tradingMode || "paper", data.tradingMode === "paper" || !data.tradingMode ? "ok" : "warn"),
+              ruleCard("Manual approval", data.requireManualApproval ? "Required" : "Off", data.requireManualApproval ? "warn" : "ok"),
+              ruleCard("Daily stop", "2% max loss", "warn"),
+              ruleCard("Loss limit", "3 in a row", "warn"),
+              ruleCard("Live trading", "Disabled", "warn"),
+              ruleCard("Account", accountBlocked ? "Blocked" : "Clear", accountBlocked ? "warn" : "ok")
+            ].join("")}
+          </div>
+          <div class="explain">
+            <strong>Risk gate is working.</strong>
+            <span>Every order must pass paper mode, manual approval, daily loss limit, consecutive-loss limit, and account status checks. ChatGPT can explain a setup, but it cannot bypass these rules.</span>
+          </div>
+        `;
       }
 
       function renderProviders(data) {
@@ -1144,39 +1217,42 @@
 
       function renderScreener(data) {
         renderScreenerTable(data.results || []);
-        const top = (data.results || []).slice(0, 5).map((row) => ({
-          symbol: row.symbol,
-          volumeRatio: row.volumeRatio,
-          isSpike: row.isSpike
-        }));
-        el.screener.textContent = pretty({
-          provider: data.providerName,
-          mode: data.mode,
-          scanned: data.scanned,
-          volumeMultiplier: data.volumeMultiplier,
-          spikes: data.matches?.length || 0,
-          topResults: top,
-          errors: data.errors
-        });
+        const errors = Array.isArray(data.errors) ? data.errors.length : 0;
+        const spikes = data.matches?.length || 0;
+        const leader = (data.results || [])[0];
+        el.screenerReport.innerHTML = reportCards([
+          ["Provider", data.providerName || data.provider || "-", data.provider === "none" ? "warn" : "ok"],
+          ["Mode", data.mode === "research_only" ? "Research only" : "Read only", "ok"],
+          ["Scanned", String(data.scanned || 0), "ok"],
+          ["Spikes", spikes ? `${spikes} abnormal` : "No abnormal spike", spikes ? "warn" : "ok"],
+          ["Top volume", leader ? `${leader.symbol} ${number.format(toNumber(leader.volumeRatio))}x` : "-", "ok"],
+          ["Errors", errors ? `${errors} provider issue` : "None", errors ? "warn" : "ok"]
+        ]);
       }
 
       function renderSignal(signal) {
         const status = String(signal.signal || "NONE").toUpperCase();
         const reason = signal.reason || signal.analystNote || "waiting_for_market_data";
         const tone = status === "BUY" ? "buy" : status === "SELL" || status === "ERROR" ? "sell" : status === "BLOCKED" ? "blocked" : "none";
+        const displayStatus = status === "BLOCKED" ? "NO TRADE" : status;
+        const decisionText = status === "BUY" ? "Risk review needed" : status === "BLOCKED" ? "Protected" : status;
         el.signal.innerHTML = `
           <div class="signal-hero">
             <div>
               <span class="label">Current signal</span>
-              <strong>${escapeHtml(status)}</strong>
+              <strong>${escapeHtml(displayStatus)}</strong>
             </div>
-            <span class="pill ${tone}">${escapeHtml(tone === "buy" ? "Risk review needed" : status)}</span>
+            <span class="pill ${tone}">${escapeHtml(decisionText)}</span>
           </div>
-          <div class="note">${escapeHtml(humanReason(reason))}</div>
+          <div class="explain">
+            <strong>${escapeHtml(signalHeadline(status))}</strong>
+            <span>${escapeHtml(signalExplanation(status, reason))}</span>
+          </div>
           <div class="two-col">
             ${smallCard("Entry", formatOptionalMoney(signal.entry))}
             ${smallCard("Stop loss", formatOptionalMoney(signal.sl))}
             ${smallCard("Take profit", formatOptionalMoney(signal.tp))}
+            ${smallCard("Filter reason", humanReason(reason))}
             ${smallCard("Order rule", "No order without risk approval")}
           </div>
         `;
@@ -1185,15 +1261,39 @@
       function renderJournal(data) {
         const trades = Array.isArray(data.trades) ? data.trades : [];
         if (!trades.length) {
-          el.journal.className = "note";
+          el.journal.className = "";
           el.journal.innerHTML = `
-            <strong>No closed paper trades yet.</strong>
-            <p class="label">Closed TP, SL, and time-exit trades will appear here after Alpaca and Supabase sync. Open positions are shown in Position P/L.</p>
+            <div class="journal-grid">
+              ${smallCard("Closed trades", "0")}
+              ${smallCard("Win rate", "-")}
+              ${smallCard("Realized P/L", "$0.00")}
+              ${smallCard("Active strategy", "VWAP + ATR + Volume")}
+            </div>
+            <div class="explain">
+              <strong>No closed paper trades yet.</strong>
+              <span>Closed TP, SL, and time-exit trades will appear here after Alpaca and Supabase sync. Open positions are shown in Position P/L.</span>
+            </div>
+            <div class="strategy-flow">
+              ${flowStep("1", "VWAP cross")}
+              ${flowStep("2", "ATR filter")}
+              ${flowStep("3", "Volume check")}
+              ${flowStep("4", "Risk approval")}
+              ${flowStep("5", "Journal")}
+            </div>
           `;
           return;
         }
+        const wins = trades.filter((trade) => toNumber(trade.pnl) > 0).length;
+        const realized = trades.reduce((sum, trade) => sum + toNumber(trade.pnl), 0);
+        const winRate = trades.length ? `${number.format((wins / trades.length) * 100)}%` : "-";
         el.journal.className = "";
         el.journal.innerHTML = `
+          <div class="journal-grid">
+            ${smallCard("Closed trades", String(trades.length))}
+            ${smallCard("Win rate", winRate)}
+            ${smallCard("Realized P/L", money.format(realized))}
+            ${smallCard("Active strategy", "VWAP + ATR + Volume")}
+          </div>
           <table class="table">
             <thead><tr><th>Symbol</th><th>Side</th><th>P/L</th><th>Exit</th></tr></thead>
             <tbody>
@@ -1361,7 +1461,7 @@
       }
 
       function serviceCard(label, value, tone, href) {
-        const content = `<span class="label">${escapeHtml(label)}</span><strong class="${tone === "warn" ? "bad" : "good"}">${escapeHtml(value)}</strong>`;
+        const content = `<span class="label">${escapeHtml(label)}</span><strong class="${tone === "warn" ? "bad" : "good"}">${escapeHtml(value)}</strong>${href ? '<span class="card-action">Open</span>' : ""}`;
         if (href) return `<a class="service-card" href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${content}</a>`;
         return `<div class="service-card">${content}</div>`;
       }
@@ -1378,6 +1478,16 @@
         return entries.map(([label, value]) => `<div class="stat-cell"><span class="label">${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
       }
 
+      function reportCards(entries) {
+        return entries
+          .map(([label, value, tone]) => `<div class="report-card"><span class="label">${escapeHtml(label)}</span><strong class="${tone === "warn" ? "bad" : "good"}">${escapeHtml(value)}</strong></div>`)
+          .join("");
+      }
+
+      function flowStep(index, label) {
+        return `<div class="flow-step"><span>Step ${escapeHtml(index)}</span><strong>${escapeHtml(label)}</strong></div>`;
+      }
+
       function legendRow(kind, label, value, width) {
         return `<div class="legend-row"><span><span class="swatch ${kind}"></span>${escapeHtml(label)}</span><div class="bar-track"><div class="bar ${kind}" style="width:${Math.max(4, Math.min(100, width))}%"></div></div><strong>${escapeHtml(value)}</strong></div>`;
       }
@@ -1387,8 +1497,45 @@
         return Number.isFinite(n) && n > 0 ? money.format(n) : "-";
       }
 
+      function signalHeadline(status) {
+        if (status === "BUY") return "VWAP setup is active.";
+        if (status === "BLOCKED") return "No trade. The safety filters blocked this setup.";
+        if (status === "SELL") return "Take-profit exit condition is active.";
+        if (status === "STOP") return "Stop-loss exit condition is active.";
+        if (status === "TIME") return "Session time exit is active.";
+        if (status === "ERROR") return "Signal check returned an error.";
+        return "No actionable setup right now.";
+      }
+
+      function signalExplanation(status, reason) {
+        const readable = humanReason(reason);
+        if (status === "BLOCKED") {
+          return `${readable}. This is protective behavior: the bot waits instead of forcing a paper trade when volatility, volume, trend, or session rules are not aligned.`;
+        }
+        if (status === "BUY") {
+          return `${readable}. The next step is risk-manager review and manual paper approval before any order can be submitted.`;
+        }
+        if (status === "NONE") {
+          return `${readable}. The platform is online, but the strategy has no confirmed VWAP entry on the latest bar.`;
+        }
+        return readable;
+      }
+
       function humanReason(reason) {
-        return String(reason || "")
+        const reasons = {
+          atr_too_low: "ATR is too low",
+          atr_too_high: "ATR is too high",
+          outside_session_window: "Outside NY trading window",
+          no_trade_date: "No-trade date",
+          volume_not_confirmed: "Volume is not confirmed",
+          trend_filter_reject: "Trend filter rejected the setup",
+          no_vwap_cross: "No VWAP cross yet",
+          need_at_least_two_bars: "Need at least two bars",
+          waiting_for_market_data: "Waiting for market data",
+          running_vwap_sample: "Running VWAP sample",
+          vwap_cross_up_confirmed: "VWAP cross-up confirmed"
+        };
+        return reasons[reason] || String(reason || "")
           .replace(/_/g, " ")
           .replace(/\b\w/g, (letter) => letter.toUpperCase());
       }
@@ -1408,10 +1555,6 @@
       function toNumber(value) {
         const n = Number(value);
         return Number.isFinite(n) ? n : 0;
-      }
-
-      function pretty(value) {
-        return JSON.stringify(value, null, 2);
       }
 
       function escapeHtml(value) {

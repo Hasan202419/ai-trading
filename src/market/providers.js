@@ -97,9 +97,9 @@ export class MarketDataRouter {
     symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA"],
     lookbackDays = 20,
     volumeMultiplier = 2,
-    provider = "yahoo"
+    provider = "auto"
   } = {}) {
-    const client = this.providers[provider] || this.providers.yahoo;
+    const client = this.screenerClient(provider);
     const uniqueSymbols = [...new Set(symbols.map(normalizeSymbol).filter(Boolean))].slice(0, 100);
     const results = [];
     const errors = [];
@@ -148,6 +148,13 @@ export class MarketDataRouter {
       errors,
       fetchedAt: new Date().toISOString()
     };
+  }
+
+  screenerClient(provider = "auto") {
+    if (provider && provider !== "auto") {
+      return this.providers[provider] || this.providers.yahoo;
+    }
+    return this.candidates("auto").find((client) => client.isConfigured() && client.supportsBars) || this.providers.yahoo;
   }
 }
 

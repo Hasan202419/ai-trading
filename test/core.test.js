@@ -201,6 +201,41 @@ test("market data router maps Alpaca stock snapshots and bars", async () => {
   assert.equal(snapshot.quote.volume, 12345);
 });
 
+test("volume screener auto mode uses first configured bar provider", async () => {
+  const router = new MarketDataRouter(
+    {
+      providerPriority: ["alpaca", "yahoo"],
+      alpaca: {
+        keyId: "alpaca-key",
+        secretKey: "alpaca-secret",
+        baseUrl: "https://data.alpaca.test",
+        feed: "iex",
+        dataDelayMinutes: 15
+      },
+      yahoo: { enabled: true, baseUrl: "https://query1.finance.test", dataDelayMinutes: 15 },
+      massive: {},
+      finnhub: {},
+      finviz: {}
+    },
+    async (url, options) => {
+      assert.equal(options.headers["APCA-API-KEY-ID"], "alpaca-key");
+      assert.ok(url.includes("/v2/stocks/bars?symbols=AMD"));
+      assert.ok(url.includes("timeframe=1Day"));
+      return jsonResponse({
+        bars: {
+          AMD: [
+            { t: "2026-05-01T04:00:00Z", o: 10, h: 11, l: 9, c: 10.5, v: 100 },
+            { t: "2026-05-04T04:00:00Z", o: 11, h: 13, l: 10, c: 12.5, v: 300 }
+          ]
+        }
+      });
+    }
+  );
+  const result = await router.screenVolumeSpikes({ symbols: ["amd"], lookbackDays: 2, volumeMultiplier: 2, provider: "auto" });
+  assert.equal(result.provider, "alpaca");
+  assert.equal(result.matches[0].symbol, "AMD");
+});
+
 test("market data router maps Finnhub candles when Massive is unavailable", async () => {
   const router = new MarketDataRouter(
     {

@@ -72,7 +72,7 @@ export class JarvisService {
     symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"],
     lookbackDays = 20,
     volumeMultiplier = 2,
-    provider = "yahoo"
+    provider = "auto"
   } = {}) {
     const result = await this.marketData.screenVolumeSpikes({
       symbols: parseSymbols(symbols),
