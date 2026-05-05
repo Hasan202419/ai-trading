@@ -196,9 +196,12 @@ export class AlpacaMarketDataClient {
   async getBars({ symbol, timeframe = DEFAULT_TIMEFRAME, limit = DEFAULT_LIMIT }) {
     const requestedLimit = Math.min(Math.max(Number(limit) || DEFAULT_LIMIT, 2), 10000);
     const timeframeName = alpacaTimeframe(timeframe);
+    const { startIso, endIso } = isoRangeForBars(normalizeTimeframe(timeframe), requestedLimit);
     const path =
       `/v2/stocks/bars?symbols=${encodeURIComponent(symbol)}` +
       `&timeframe=${encodeURIComponent(timeframeName)}` +
+      `&start=${encodeURIComponent(startIso)}` +
+      `&end=${encodeURIComponent(endIso)}` +
       `&limit=${requestedLimit}` +
       `&adjustment=raw&feed=${encodeURIComponent(this.config.feed || "iex")}`;
     const data = await this.request(path);
@@ -511,6 +514,15 @@ function dateRangeForBars(minutes, limit) {
   return {
     from: formatDate(fromDate),
     to: formatDate(toDate)
+  };
+}
+
+function isoRangeForBars(minutes, limit) {
+  const end = new Date();
+  const start = new Date(end.getTime() - lookbackMs(minutes, limit));
+  return {
+    startIso: start.toISOString(),
+    endIso: end.toISOString()
   };
 }
 
