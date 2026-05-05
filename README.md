@@ -62,6 +62,12 @@ MASSIVE_API_KEY=
 FINNHUB_API_KEY=
 ```
 
+Sync local `.env` market-data keys to all Render services without printing secret values:
+
+```powershell
+.\scripts\sync-render-market-env.ps1 -Redeploy
+```
+
 Execution stays paper-only. Market data is used for analysis, deterministic VWAP signal evaluation, and research screeners; ChatGPT still cannot place orders by itself. Finviz is intentionally not used for execution signals unless you provide a documented, licensed OHLCV API endpoint.
 
 Run the built-in Yahoo/Finviz-style volume spike screener:
