@@ -84,7 +84,12 @@ function createMcpServer() {
               domain: config.appPublicUrl,
               csp: {
                 connectDomains: [config.appPublicUrl, config.mcpPublicUrl],
-                resourceDomains: []
+                resourceDomains: [
+                  "https://s3.tradingview.com",
+                  "https://www.tradingview.com",
+                  "https://s.tradingview.com",
+                  "https://www.tradingview-widget.com"
+                ]
               }
             }
           }
