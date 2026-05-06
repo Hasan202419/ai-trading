@@ -4,7 +4,7 @@
   "app_info": {
     "display_name": "JARVIS Algo Trader",
     "subtitle": "Paper trading desk",
-    "description": "JARVIS Algo Trader helps users monitor an Alpaca paper-trading account, inspect deterministic VWAP strategy signals, screen Yahoo Finance volume activity, review risk rules, and get advisory-only market analysis in ChatGPT. The app keeps live trading disabled and requires deterministic risk checks before any paper-trade approval workflow.",
+    "description": "JARVIS Algo Trader helps users monitor an Alpaca paper-trading account, inspect deterministic VWAP and Scalping Pro signals, screen abnormal US stock volume through configured market-data providers, review risk rules, and get advisory-only market analysis in ChatGPT. The app keeps live trading disabled and requires deterministic risk checks before any paper-trade approval workflow.",
     "category": "FINANCE"
   },
   "tools": {
@@ -63,7 +63,7 @@
         "destructiveHint": false
       },
       "justifications": {
-        "read_only_justification": "Runs a read-only market-data scan but records a private audit event for the screener run.",
+        "read_only_justification": "Runs a read-only daily or intraday market-data scan but records a private audit event for the screener run.",
         "open_world_justification": "Does not publish results or change public external systems.",
         "destructive_justification": "Does not delete data, overwrite records, or submit trades."
       }
@@ -119,12 +119,12 @@
       "user_prompt": "Which market data providers are configured in JARVIS?",
       "file_attachment_urls": null,
       "tools_triggered": "get_market_providers",
-      "expected_output": "Shows Yahoo, Massive, Finnhub, and Finviz status with which feeds support bars.",
+      "expected_output": "Shows Alpaca, Yahoo, Massive, Finnhub, and Finviz status with which feeds support bars.",
       "expected_output_url": null
     },
     {
-      "description": "Analyze a Yahoo market snapshot for SPY.",
-      "user_prompt": "Analyze SPY with the JARVIS VWAP strategy using Yahoo data.",
+      "description": "Analyze a market snapshot for SPY.",
+      "user_prompt": "Analyze SPY with the JARVIS VWAP strategy using the best configured market-data provider.",
       "file_attachment_urls": null,
       "tools_triggered": "analyze_market_snapshot",
       "expected_output": "Returns advisory-only VWAP/ATR/volume analysis and clearly states that no order was placed.",
@@ -132,10 +132,10 @@
     },
     {
       "description": "Run a volume spike screener.",
-      "user_prompt": "Screen SPY, NVDA, MARA, and TSLA for abnormal volume.",
+      "user_prompt": "Screen SPY, NVDA, MARA, and TSLA for abnormal 1-minute volume.",
       "file_attachment_urls": null,
       "tools_triggered": "screen_volume_spikes",
-      "expected_output": "Ranks symbols by volume ratio and marks whether any symbol exceeds the configured spike threshold.",
+      "expected_output": "Ranks symbols by volume ratio, reports provider and timeframe, and marks whether any symbol exceeds the configured spike threshold.",
       "expected_output_url": null
     },
     {

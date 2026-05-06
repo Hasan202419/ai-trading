@@ -155,12 +155,13 @@ function createMcpServer() {
     "screen_volume_spikes",
     {
       title: "Screen Volume Spikes",
-      description: "Run a read-only stock screener for abnormal daily volume. It never places orders.",
+      description: "Run a read-only stock screener for abnormal daily or intraday volume using configured market-data providers. It never places orders.",
       inputSchema: {
         symbols: z.array(z.string()).default(["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"]),
         lookbackDays: z.number().int().min(5).max(120).default(20),
         volumeMultiplier: z.number().min(1).max(20).default(2),
-        provider: z.enum(["alpaca", "yahoo", "massive", "finnhub"]).default("yahoo")
+        provider: z.enum(["auto", "alpaca", "yahoo", "massive", "finnhub"]).default("auto"),
+        timeframe: z.string().default("1")
       },
       annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }

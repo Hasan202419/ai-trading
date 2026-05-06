@@ -40,7 +40,7 @@ They are PNG files, both wider than 706px and 860px tall.
 
 - The app is paper-trading only.
 - ChatGPT does not place live orders.
-- Tools can fetch portfolio state, market providers, Alpaca/Yahoo snapshots, volume screener results, strategy suggestions, paper-trade risk approval, and trade journal rows.
+- Tools can fetch portfolio state, market providers, Alpaca/Massive/Finnhub/Yahoo snapshots, intraday volume screener results, strategy suggestions, paper-trade risk approval, and trade journal rows.
 - Use the positive and negative tests inside `chatgpt-app-submission.json` for the Testing step.
 
 ## Manual Checks Before Submit
