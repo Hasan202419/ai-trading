@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { defaultRiskSettings, defaultStrategySettings } from "../src/config.js";
 import { analyzeScalpingSignal } from "../src/core/scalping.js";
+import { analyzeVolumeIgnition } from "../src/core/volume-ignition.js";
 import { evaluateRisk } from "../src/core/risk.js";
 import { evaluateLatestSignal, runStrategy } from "../src/core/strategy.js";
 import { OpenAIAnalysisClient } from "../src/llm/openai.js";
@@ -352,6 +353,39 @@ test("Scalping Pro flags aligned volume and trend as BUY watch", () => {
   assert.equal(result.volume.spike, true);
 });
 
+test("volume ignition analyzer returns a bullish watchlist trade plan", () => {
+  const result = analyzeVolumeIgnition("msft", ignitionBars());
+  assert.equal(result.symbol, "MSFT");
+  assert.equal(result.signal, "BUY_WATCH");
+  assert.equal(result.qualifies, true);
+  assert.ok(result.rvol >= 2);
+  assert.ok(result.continuationProbability >= 70);
+  assert.ok(result.tradePlan.entryPrice > 0);
+  assert.ok(result.tradePlan.stopLoss < result.tradePlan.entryPrice);
+  assert.ok(result.tradePlan.targetPrice > result.tradePlan.entryPrice);
+});
+
+test("market data router screens volume ignition candidates", async () => {
+  const router = new MarketDataRouter(
+    {
+      providerPriority: ["yahoo"],
+      yahoo: { enabled: true, baseUrl: "https://query1.finance.test", dataDelayMinutes: 15 },
+      massive: {},
+      finnhub: {},
+      finviz: {}
+    },
+    async (url) => {
+      assert.ok(url.includes("/v8/finance/chart/MSFT"));
+      return jsonResponse(yahooBarsResponse(ignitionBars()));
+    }
+  );
+  const result = await router.screenVolumeIgnition({ symbols: ["msft"], provider: "auto", timeframe: "1d" });
+  assert.equal(result.scanner, "volume_ignition");
+  assert.equal(result.scanned, 1);
+  assert.equal(result.matches[0].symbol, "MSFT");
+  assert.equal(result.results[0].tradePlan.riskRewardRatio, 2);
+});
+
 function bar(t, open, high, low, close, volume) {
   return { t, open, high, low, close, volume };
 }
@@ -387,6 +421,47 @@ function yahooChartResponse(volumes, closes) {
       error: null
     }
   };
+}
+
+function yahooBarsResponse(bars) {
+  return {
+    chart: {
+      result: [
+        {
+          timestamp: bars.map((item) => Math.floor(new Date(item.t).getTime() / 1000)),
+          indicators: {
+            quote: [
+              {
+                open: bars.map((item) => item.open),
+                high: bars.map((item) => item.high),
+                low: bars.map((item) => item.low),
+                close: bars.map((item) => item.close),
+                volume: bars.map((item) => item.volume)
+              }
+            ]
+          }
+        }
+      ],
+      error: null
+    }
+  };
+}
+
+function ignitionBars() {
+  return Array.from({ length: 40 }, (_, index) => {
+    const close = 96 + index * 0.22;
+    const range = index >= 22 ? 1.45 : 0.5;
+    const volume = index === 37 ? 1200000 : index === 38 ? 1600000 : index === 39 ? 3200000 : 1100000;
+    const timestamp = new Date(Date.UTC(2026, 3, 1 + index, 20, 0, 0)).toISOString();
+    return bar(
+      timestamp,
+      close - 0.18,
+      close + range,
+      close - range,
+      close,
+      volume
+    );
+  });
 }
 
 function buySignal() {

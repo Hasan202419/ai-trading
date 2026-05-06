@@ -34,6 +34,18 @@ const routes = {
       timeframe: params.get("timeframe") || undefined
     });
   },
+  "GET /api/screener/volume-ignition": async (_body, req) => {
+    const params = new URL(req.url, "http://localhost").searchParams;
+    return service.screenVolumeIgnition({
+      symbols: params.get("symbols") || undefined,
+      provider: params.get("provider") || undefined,
+      timeframe: params.get("timeframe") || undefined,
+      lookbackBars: params.get("lookbackBars") || undefined,
+      volumeMultiplier: params.get("volumeMultiplier") || undefined,
+      minAverageVolume: params.get("minAverageVolume") || undefined,
+      maxRecentMovePct: params.get("maxRecentMovePct") || undefined
+    });
+  },
   "GET /api/trade-journal": async () => service.getTradeJournal(20),
   "POST /api/strategy/evaluate": async (body) => {
     const signal = evaluateLatestSignal(body.bars || [], { ...config.strategy, ...(body.settings || {}) });

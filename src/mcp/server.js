@@ -175,6 +175,26 @@ function createMcpServer() {
   );
 
   server.registerTool(
+    "screen_volume_ignition",
+    {
+      title: "Screen Volume Ignition",
+      description: "Use this when the user wants bullish US stock watchlist candidates based on abnormal volume expansion, RVOL, resistance proximity, EMA structure, ATR expansion, and liquidity filters. It never places orders.",
+      inputSchema: {
+        symbols: z.array(z.string()).default(["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"]),
+        provider: z.enum(["auto", "alpaca", "yahoo", "massive", "finnhub"]).default("auto"),
+        timeframe: z.string().default("1d"),
+        lookbackBars: z.number().int().min(35).max(250).default(80),
+        volumeMultiplier: z.number().min(1).max(20).default(2),
+        minAverageVolume: z.number().int().min(100000).max(100000000).default(1000000),
+        maxRecentMovePct: z.number().min(1).max(30).default(10)
+      },
+      annotations: { readOnlyHint: false, openWorldHint: false, destructiveHint: false },
+      _meta: { ui: { resourceUri: widgetUri }, "openai/outputTemplate": widgetUri }
+    },
+    async (input) => toolResult(await service.screenVolumeIgnition(input), "Volume ignition scan finished. No order was placed.")
+  );
+
+  server.registerTool(
     "propose_strategy_adjustment",
     {
       title: "Propose Strategy Adjustment",

@@ -1,3 +1,5 @@
+import { analyzeVolumeIgnition } from "../core/volume-ignition.js";
+
 const DEFAULT_LIMIT = 80;
 const DEFAULT_TIMEFRAME = "1";
 
@@ -153,6 +155,75 @@ export class MarketDataRouter {
       scanned: uniqueSymbols.length,
       matches: results.filter((result) => result.isSpike).sort((a, b) => b.volumeRatio - a.volumeRatio),
       results: results.sort((a, b) => b.volumeRatio - a.volumeRatio),
+      errors,
+      fetchedAt: new Date().toISOString()
+    };
+  }
+
+  async screenVolumeIgnition({
+    symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"],
+    provider = "auto",
+    timeframe = "1d",
+    lookbackBars = 80,
+    volumeMultiplier = 2,
+    minAverageVolume = 1000000,
+    maxRecentMovePct = 10,
+    concurrency = 6
+  } = {}) {
+    const client = this.screenerClient(provider);
+    const uniqueSymbols = [...new Set(symbols.map(normalizeSymbol).filter(Boolean))].slice(0, 100);
+    const errors = [];
+    const normalizedTimeframe = String(timeframe || "1d");
+    const requestedLimit = Math.max(Number(lookbackBars) || DEFAULT_LIMIT, 35);
+
+    const rows = await mapLimit(uniqueSymbols, Math.max(1, Math.min(Number(concurrency) || 6, 10)), async (symbol) => {
+      try {
+        const bars = await client.getBars({
+          symbol,
+          timeframe: normalizedTimeframe,
+          limit: requestedLimit
+        });
+        if (!bars.length) {
+          errors.push({ symbol, provider: client.id, reason: "no_bars_returned" });
+          return null;
+        }
+        const result = analyzeVolumeIgnition(symbol, bars, {
+          minRvol: Number(volumeMultiplier) || 2,
+          minAverageVolume: Number(minAverageVolume) || 1000000,
+          maxRecentMovePct: Number(maxRecentMovePct) || 10
+        });
+        return {
+          ...result,
+          provider: client.id,
+          providerName: client.name,
+          dataDelayMinutes: client.dataDelayMinutes,
+          timeframe: normalizedTimeframe
+        };
+      } catch (error) {
+        errors.push({ symbol, provider: client.id, reason: error.message });
+        return null;
+      }
+    });
+
+    const results = rows
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (Boolean(b.qualifies) !== Boolean(a.qualifies)) return Number(b.qualifies) - Number(a.qualifies);
+        return Number(b.continuationProbability || 0) - Number(a.continuationProbability || 0);
+      });
+
+    return {
+      scanner: "volume_ignition",
+      provider: client.id,
+      providerName: client.name,
+      timeframe: normalizedTimeframe,
+      lookbackBars: requestedLimit,
+      volumeMultiplier: Number(volumeMultiplier),
+      minAverageVolume: Number(minAverageVolume),
+      maxRecentMovePct: Number(maxRecentMovePct),
+      scanned: uniqueSymbols.length,
+      matches: results.filter((result) => result.qualifies),
+      results,
       errors,
       fetchedAt: new Date().toISOString()
     };
@@ -366,9 +437,10 @@ export class MassiveClient {
 
   async getBars({ symbol, timeframe = DEFAULT_TIMEFRAME, limit = DEFAULT_LIMIT }) {
     const minutes = normalizeTimeframe(timeframe);
+    const isDaily = minutes === 1440;
     const { from, to } = dateRangeForBars(minutes, limit);
     const path =
-      `/v2/aggs/ticker/${encodeURIComponent(symbol)}/range/${minutes}/minute/${from}/${to}` +
+      `/v2/aggs/ticker/${encodeURIComponent(symbol)}/range/${isDaily ? 1 : minutes}/${isDaily ? "day" : "minute"}/${from}/${to}` +
       `?adjusted=true&sort=asc&limit=${Math.min(Number(limit) || DEFAULT_LIMIT, 50000)}`;
     const data = await this.request(path);
     return (data.results || []).map((bar) => ({
@@ -432,9 +504,10 @@ export class FinnhubClient {
 
   async getBars({ symbol, timeframe = DEFAULT_TIMEFRAME, limit = DEFAULT_LIMIT }) {
     const minutes = normalizeTimeframe(timeframe);
+    const resolution = minutes === 1440 ? "D" : String(minutes);
     const { fromUnix, toUnix } = unixRangeForBars(minutes, limit);
     const data = await this.request(
-      `/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${minutes}&from=${fromUnix}&to=${toUnix}`
+      `/stock/candle?symbol=${encodeURIComponent(symbol)}&resolution=${resolution}&from=${fromUnix}&to=${toUnix}`
     );
     if (data.s !== "ok") return [];
     return (data.t || []).map((time, index) => ({

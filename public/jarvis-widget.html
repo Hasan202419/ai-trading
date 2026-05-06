@@ -880,6 +880,7 @@
           </select>
           <button id="loadMarket" class="secondary">Load chart</button>
           <button id="runScreener" class="secondary">Run screener</button>
+          <button id="runIgnition" class="secondary">Run ignition</button>
         </div>
         <span class="updated" id="updated">Not loaded yet</span>
       </section>
@@ -957,6 +958,22 @@
             <div class="report-card"><span class="label">Mode</span><strong>Research only</strong></div>
             <div class="report-card"><span class="label">Spikes</span><strong>-</strong></div>
             <div class="report-card"><span class="label">Errors</span><strong>-</strong></div>
+          </div>
+        </article>
+
+        <article class="panel wide">
+          <div class="panel-head">
+            <h2>Volume Ignition Scanner</h2>
+            <span class="hint">bullish watchlist with entry, stop, target</span>
+          </div>
+          <div class="table-wrap" id="ignitionTable">
+            <div class="empty">Ignition scanner is loading automatically.</div>
+          </div>
+          <div class="report-grid" id="ignitionReport">
+            <div class="report-card"><span class="label">Provider</span><strong>Checking</strong></div>
+            <div class="report-card"><span class="label">Qualified</span><strong>-</strong></div>
+            <div class="report-card"><span class="label">Leader</span><strong>-</strong></div>
+            <div class="report-card"><span class="label">Risk</span><strong>-</strong></div>
           </div>
         </article>
 
@@ -1069,8 +1086,11 @@
         providerSelect: document.getElementById("providerSelect"),
         loadMarket: document.getElementById("loadMarket"),
         runScreener: document.getElementById("runScreener"),
+        runIgnition: document.getElementById("runIgnition"),
         screenerTable: document.getElementById("screenerTable"),
-        screenerReport: document.getElementById("screenerReport")
+        screenerReport: document.getElementById("screenerReport"),
+        ignitionTable: document.getElementById("ignitionTable"),
+        ignitionReport: document.getElementById("ignitionReport")
       };
 
       window.addEventListener(
@@ -1089,6 +1109,7 @@
       el.runSignal.addEventListener("click", () => runSampleSignal());
       el.loadMarket.addEventListener("click", () => loadMarketSnapshot());
       el.runScreener.addEventListener("click", () => runVolumeScreener());
+      el.runIgnition.addEventListener("click", () => runVolumeIgnition());
       renderTradingViewWidget("SPY");
       loadDashboard();
 
@@ -1121,7 +1142,12 @@
           setBusy(false);
         }
 
-        await Promise.allSettled([loadMarketSnapshot({ auto: true }), runVolumeScreener({ auto: true }), runSampleSignal({ auto: true })]);
+        await Promise.allSettled([
+          loadMarketSnapshot({ auto: true }),
+          runVolumeScreener({ auto: true }),
+          runVolumeIgnition({ auto: true }),
+          runSampleSignal({ auto: true })
+        ]);
       }
 
       async function loadMarketSnapshot(options = {}) {
@@ -1170,6 +1196,28 @@
           ]);
         } finally {
           el.runScreener.disabled = false;
+        }
+      }
+
+      async function runVolumeIgnition(options = {}) {
+        if (!options.auto) el.runIgnition.disabled = true;
+        el.ignitionTable.innerHTML = `<div class="empty">Scanning ${screenSymbols.length} liquid US stocks for RVOL, resistance, EMA, ATR, and risk/reward alignment.</div>`;
+        try {
+          const symbols = encodeURIComponent(screenSymbols.join(","));
+          const provider = encodeURIComponent(el.providerSelect.value || "auto");
+          const data = await getJson(`/api/screener/volume-ignition?symbols=${symbols}&timeframe=1d&lookbackBars=80&volumeMultiplier=2&provider=${provider}`);
+          renderIgnition(data);
+        } catch (error) {
+          const message = friendlyErrorMessage(error);
+          el.ignitionTable.innerHTML = `<div class="empty">${escapeHtml(message)}</div>`;
+          el.ignitionReport.innerHTML = reportCards([
+            ["Provider", "Unavailable", "warn"],
+            ["Qualified", "-"],
+            ["Leader", "-"],
+            ["Errors", "Check key/provider", "warn"]
+          ]);
+        } finally {
+          el.runIgnition.disabled = false;
         }
       }
 
@@ -1343,6 +1391,23 @@
           ["Scanned", String(data.scanned || 0), "ok"],
           ["Spikes", spikes ? `${spikes} abnormal` : "No abnormal spike", spikes ? "warn" : "ok"],
           ["Top volume", leader ? `${leader.symbol} ${number.format(toNumber(leader.volumeRatio))}x` : "-", "ok"],
+          ["Errors", errors ? `${errors} provider issue` : "None", errors ? "warn" : "ok"]
+        ]);
+      }
+
+      function renderIgnition(data) {
+        renderIgnitionTable(data.results || []);
+        const errors = Array.isArray(data.errors) ? data.errors.length : 0;
+        const qualified = data.matches?.length || 0;
+        const leader = (data.results || [])[0];
+        el.ignitionReport.innerHTML = reportCards([
+          ["Provider", data.providerName || data.provider || "-", data.provider === "none" ? "warn" : "ok"],
+          ["Timeframe", data.timeframe === "1d" ? "Daily" : data.timeframe || "-", "ok"],
+          ["Scanned", String(data.scanned || 0), "ok"],
+          ["Qualified", qualified ? `${qualified} BUY WATCH` : "No clean buy yet", qualified ? "ok" : "warn"],
+          ["Leader", leader ? `${leader.symbol} ${number.format(toNumber(leader.continuationProbability))}%` : "-", leader?.qualifies ? "ok" : "warn"],
+          ["Top RVOL", leader ? `${number.format(toNumber(leader.rvol))}x` : "-", leader?.rvol >= 2 ? "ok" : "warn"],
+          ["Risk", leader?.riskLevel || "-", leader?.riskLevel === "High" ? "warn" : "ok"],
           ["Errors", errors ? `${errors} provider issue` : "None", errors ? "warn" : "ok"]
         ]);
       }
@@ -1588,6 +1653,63 @@
         `;
       }
 
+      function renderIgnitionTable(results) {
+        if (!results.length) {
+          el.ignitionTable.innerHTML = '<div class="empty">No ignition rows returned yet. Try another provider or refresh after daily bars respond.</div>';
+          return;
+        }
+        el.ignitionTable.innerHTML = `
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Rank</th><th>Ticker</th><th>Price</th><th>RVOL</th><th>Resistance</th><th>Trend stage</th><th>Entry zone</th><th>Target</th><th>Probability</th><th>Risk</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${results
+                .slice(0, 14)
+                .map(
+                  (row, index) => `
+                    <tr>
+                      <td class="mono">${index + 1}</td>
+                      <td><strong>${escapeHtml(row.symbol || "-")}</strong></td>
+                      <td>${money.format(toNumber(row.price))}</td>
+                      <td class="mono ${row.rvol >= 2 ? "good" : ""}">${number.format(toNumber(row.rvol))}x</td>
+                      <td>${number.format(toNumber(row.distanceToResistancePct))}%</td>
+                      <td>${escapeHtml(row.trendStage || "-")}</td>
+                      <td>${escapeHtml(row.entryZone || "-")}</td>
+                      <td>${formatOptionalMoney(row.tradePlan?.targetPrice)}</td>
+                      <td class="mono">${number.format(toNumber(row.continuationProbability))}%</td>
+                      <td class="${row.qualifies ? "good" : row.riskLevel === "High" ? "bad" : ""}">${row.qualifies ? "BUY WATCH" : escapeHtml(row.riskLevel || "Watch")}</td>
+                    </tr>
+                  `
+                )
+                .join("")}
+            </tbody>
+          </table>
+          ${renderIgnitionLeader(results[0])}
+        `;
+      }
+
+      function renderIgnitionLeader(row) {
+        if (!row) return "";
+        const plan = row.tradePlan || {};
+        return `
+          <div class="explain">
+            <strong>${escapeHtml(row.symbol || "-")} analyst setup: ${escapeHtml(row.signal || "WAIT")}</strong>
+            <span>${escapeHtml(row.reason || "Waiting for confirmation.")}</span>
+          </div>
+          <div class="journal-grid">
+            ${smallCard("Entry", formatOptionalMoney(plan.entryPrice))}
+            ${smallCard("Stop", formatOptionalMoney(plan.stopLoss))}
+            ${smallCard("Target", formatOptionalMoney(plan.targetPrice))}
+            ${smallCard("R/R", plan.riskRewardRatio ? `${number.format(toNumber(plan.riskRewardRatio))}:1` : "-")}
+            ${smallCard("Position example", plan.positionSizeExample || "-")}
+            ${smallCard("Execution", plan.executionPlan || "Wait for confirmation")}
+          </div>
+        `;
+      }
+
       function renderPositions(positions) {
         if (!positions.length) {
           el.positionsChart.innerHTML = '<div class="empty">No open paper positions.</div>';
@@ -1611,11 +1733,18 @@
       }
 
       function renderToolResult(data) {
+        if (data.scanner === "volume_ignition") {
+          renderIgnition(data);
+          return;
+        }
+        if ((data.matches || data.results) && !data.bars && !data.quote) {
+          renderScreener(data);
+          return;
+        }
         if (data.account || data.positions) renderPortfolio(data);
         if (data.providers) renderProviders(data);
         if (data.bars || data.quote || data.provider) renderMarketSnapshot(data);
         if (data.scalping) renderScalpingPro(data.scalping);
-        if (data.matches || data.results) renderScreener(data);
         if (data.status || data.orderPlan || data.reason) renderRiskCards(data);
         if (data.signal || data.analystNote) renderSignal(data.signal || data);
         if (data.trades || data.note) renderJournal(data);

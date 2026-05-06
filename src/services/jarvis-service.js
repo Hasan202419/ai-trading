@@ -100,6 +100,42 @@ export class JarvisService {
     };
   }
 
+  async screenVolumeIgnition({
+    symbols = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "AMD", "META", "AMZN", "GOOGL"],
+    provider = "auto",
+    timeframe = "1d",
+    lookbackBars = 80,
+    volumeMultiplier = 2,
+    minAverageVolume = 1000000,
+    maxRecentMovePct = 10
+  } = {}) {
+    const result = await this.marketData.screenVolumeIgnition({
+      symbols: parseSymbols(symbols),
+      provider,
+      timeframe,
+      lookbackBars,
+      volumeMultiplier,
+      minAverageVolume,
+      maxRecentMovePct
+    });
+    await this.audit("volume_ignition_screener_run", {
+      provider: result.provider,
+      timeframe: result.timeframe,
+      scanned: result.scanned,
+      matches: result.matches.map((match) => ({
+        symbol: match.symbol,
+        rvol: match.rvol,
+        continuationProbability: match.continuationProbability,
+        trendStage: match.trendStage
+      }))
+    });
+    return {
+      ...result,
+      mode: "research_only",
+      note: "Volume ignition scanner is advisory-only research. It does not place orders or bypass risk controls."
+    };
+  }
+
   async analyzeMarketSnapshot({ symbol = "SPY", bars = [], timeframe = "1", provider = "auto", recentStats = {}, portfolio = null }) {
     const fetchedSnapshot = bars.length
       ? null

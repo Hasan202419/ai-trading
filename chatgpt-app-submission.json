@@ -68,6 +68,18 @@
         "destructive_justification": "Does not delete data, overwrite records, or submit trades."
       }
     },
+    "screen_volume_ignition": {
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": false,
+        "destructiveHint": false
+      },
+      "justifications": {
+        "read_only_justification": "Runs an advisory-only bullish volume ignition scan and records a private audit event for the screener run.",
+        "open_world_justification": "Does not publish screener results or change public external systems.",
+        "destructive_justification": "Does not delete data, overwrite records, submit trades, or enable live trading."
+      }
+    },
     "propose_strategy_adjustment": {
       "annotations": {
         "readOnlyHint": true,
@@ -136,6 +148,14 @@
       "file_attachment_urls": null,
       "tools_triggered": "screen_volume_spikes",
       "expected_output": "Ranks symbols by volume ratio, reports provider and timeframe, and marks whether any symbol exceeds the configured spike threshold.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Run a bullish volume ignition screener.",
+      "user_prompt": "Find bullish volume ignition setups in SPY, NVDA, MARA, AMD, and TSLA with entry, stop, target, RVOL, and risk level.",
+      "file_attachment_urls": null,
+      "tools_triggered": "screen_volume_ignition",
+      "expected_output": "Ranks symbols by continuation probability, shows RVOL, distance to resistance, trend stage, entry zone, target, risk level, and clearly states that no order was placed.",
       "expected_output_url": null
     },
     {
